@@ -1,0 +1,20 @@
+.help-body {
+    padding: 20px;
+}
+.question {
+    font-size: 16px;
+    font-weight: bold;
+}
+.answer {
+    padding: 10px;
+    font-size: 12px;
+    margin-bottom: 20px;
+}
+.advanced-options-container {
+    height: 0;
+    overflow: hidden;
+    transition: height .5s;
+}
+.advanced-options-container.open {
+    height: auto;
+}

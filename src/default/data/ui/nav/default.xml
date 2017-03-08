@@ -1,0 +1,4 @@
+<nav search_view="search" color="#555555">
+    <view name="tours_home" default="true" label="Tour Creator" />
+    <view name="help" default="false" label="Help" />
+</nav>

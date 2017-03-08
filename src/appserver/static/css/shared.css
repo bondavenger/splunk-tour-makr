@@ -1,0 +1,24 @@
+body {
+    overflow: scroll;
+}
+
+/* Dashboard Overrides */
+.dashboard-body {
+    padding: 0;
+    background-color: #fff;
+}
+.dashboard-header {
+    padding: 20px 20px 0;
+    margin-bottom: 0;
+}
+.dashboard-row .dashboard-panel .panel-body.html,
+.dashboard-row .dashboard-panel .panel-body.splunk-html {
+    padding: 0;
+}
+.dashboard-menu.dashboard-header-editmenu {
+    display: none;
+}
+.dashboard-row .dashboard-panel,
+.dashboard-row .dashboard-panel .dashboard-element {
+    position: static;
+}

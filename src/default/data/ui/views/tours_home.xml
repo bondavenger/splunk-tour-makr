@@ -1,0 +1,8 @@
+<dashboard script="js/profiles/app.js, js/pages/tourshome.js" stylesheet="css/shared.css, css/tour.css" isDashboard="False" hideEdit="True" hideFooter="True">
+    <label>Splunk Tours</label>
+    <row>
+        <html>
+            <div class="tours-body"></div>
+        </html>
+    </row>
+</dashboard>

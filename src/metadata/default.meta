@@ -1,0 +1,12 @@
+[]
+export = system
+
+[views/tours_home]
+access = read : [ * ]
+export = none
+owner = nobody
+
+[views/help]
+access = read : [ * ]
+export = none
+owner = nobody
