@@ -154,6 +154,7 @@ define(
                     this.editInteractiveTour();
                 });
                 this.listenTo(this.children.toursView, 'run', function(tourName) {
+                    this.model.tour = this.collection.tours.getTourModel(tourName);
                     this.runTour(tourName);
                 });
                 this.listenTo(this.children.toursView, 'run-interactive', function(tourName) {
