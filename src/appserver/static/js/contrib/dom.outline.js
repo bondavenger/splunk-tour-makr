@@ -152,7 +152,6 @@ var DomOutline = function (options) {
     }
 
     function isExclude(e) {
-        // debugger
         if (self.opts.exclude) {
             if (jQuery(e.target).is(self.opts.exclude)) {
                 return true;

@@ -1,255 +1,248 @@
-define(
-    [
-        'jquery',
-        'underscore',
-        'module',
-        'views/Base',
-        'views/shared/controls/ControlGroup',
-        'views/shared/FlashMessages',
-        'views/shared/FlashMessagesLegacy',
-        'splunk.util',
-        'models/config',
-        'collections/shared/FlashMessages',
-        'models/services/data/inputs/Upload',
-        'uri/route',
-        'splunk.util',
-		'contrib/text!app/views/tours/image/FileUpload.html',
-		'jquery.fileupload'// jquery.iframe-transport //NO IMPORT
-    ],
-    function (
-        $,
-        _,
-        module,
-        BaseView,
-        ControlGroup,
-        FlashMessagesView,
-        FlashMessagesLegacyView,
-        splunkUtil,
-        ConfigModel,
-        FlashMessagesCollection,
-        UploadModel,
-        route,
-        splunkUtil,
-        template
-    ) {
-        return BaseView.extend({
-            moduleId: module.id,
-            template: template,
-            initialize: function (options) {
-                BaseView.prototype.initialize.apply(this, arguments);
-                this.maxFileSize = 20*1024*1024;
+define([
+    'jquery',
+    'underscore',
+    'views/Base',
+    'views/shared/FlashMessages',
+    'views/shared/FlashMessagesLegacy',
+    'collections/shared/FlashMessages',
+    'models/services/data/inputs/Upload',
+    'uri/route',
+    'splunk.util',
+    'contrib/text!app/views/tours/image/FileUpload.html',
+    'jquery.fileupload',
+], function (
+    $,
+    _,
+    BaseView,
+    FlashMessagesView,
+    FlashMessagesLegacyView,
+    FlashMessagesCollection,
+    UploadModel,
+    route,
+    splunkUtil,
+    template
+) {
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
-                this.model.input = new UploadModel();
-                this.filename = this.model.tour.entry.content.get(this.options.imageAttrName) || false;
-                this.fileData = this.model.tour.entry.content.get(this.options.imageAttr) || false;
-                this.imgDest = splunkUtil.make_url(splunkUtil.sprintf('static/app/tour_makr/img/%s', this.model.tour.entry.get('name')));
+    return class FileUploadView extends BaseView {
+        initialize(options) {
+            super.initialize(options);
 
-                this.collection = {};
-                // Use this flashmessage for input model
-                this.children.flashMessages = new FlashMessagesView({
-                    model: {
-                        input: this.model.input
-                    }
-                });
+            this.model.input = new UploadModel();
+            this.filename = this.model.tour.entry.content.get(this.options.imageAttrName) || false;
+            this.fileData = this.model.tour.entry.content.get(this.options.imageAttr) || false;
+            this.imgDest = splunkUtil.make_url(splunkUtil.sprintf('static/app/tour_makr/img/%s', this.model.tour.entry.get('name')));
 
-                // Use this flashmessages is for front end errors
-                this.collection.flashMessages = new FlashMessagesCollection();
-                this.children.flashMessagesLegacy = new FlashMessagesLegacyView({
-                    collection: this.collection.flashMessages
-                });
-            },
+            this.collection = {};
+            // Use this flashmessage for input model
+            this.children.flashMessages = new FlashMessagesView({
+                model: {
+                    input: this.model.input,
+                }
+            });
 
-            events: {
-                'click .upload-file-button': function(e) {
+            // Use this flashmessages is for front end errors
+            this.collection.flashMessages = new FlashMessagesCollection();
+            this.children.flashMessagesLegacy = new FlashMessagesLegacyView({
+                collection: this.collection.flashMessages,
+            });
+        }
+
+        events() {
+            return {
+                'click .upload-file-button': e => {
                     e.preventDefault();
                     this.$('#inputReference').click();
                 }
-            },
+            }
+        }
 
-            render: function () {
-                //remove any old fileReferences
-                this.$('#inputReference').remove();
+        render() {
+            //remove any old fileReferences
+            this.$('#inputReference').remove();
 
-                var helpLinkUpload = route.docHelp(
-                    this.model.application.get('root'),
-                    this.model.application.get('locale'),
-                    'learnmore.adddata.upload'
-                );
+            const helpLinkUpload = route.docHelp(
+                this.model.application.get('root'),
+                this.model.application.get('locale'),
+                'learnmore.adddata.upload'
+            );
 
-                var helpLinkBrowser = route.docHelp(
-                    this.model.application.get('root'),
-                    this.model.application.get('locale'),
-                    'learnmore.adddata.browser'
-                );
+            const helpLinkBrowser = route.docHelp(
+                this.model.application.get('root'),
+                this.model.application.get('locale'),
+                'learnmore.adddata.browser'
+            );
 
-                var template = this.compiledTemplate({
-                    inputMode: 0,
-                    helpLinkUpload: helpLinkUpload,
-                    helpLinkBrowser: helpLinkBrowser,
-                    maxFileSize:  Math.floor(this.maxFileSize/1024/1024)
+            const template = _.template(this.templateMain(), {
+                inputMode: 0,
+                helpLinkUpload: helpLinkUpload,
+                helpLinkBrowser: helpLinkBrowser,
+                maxFileSize:  Math.floor(MAX_FILE_SIZE/1024/1024),
+            });
+            this.$el.html(template);
+
+            if (this.filename) {
+                this.model.input.set('ui.name', this.filename);
+                this.updateSelectedFileLabel();
+                this.updatePreviewBG(this.filename);
+            }
+
+            this.$('.shared-flashmessages')
+                .html(this.children.flashMessages.render().el)
+                .append(this.children.flashMessagesLegacy.render().el);
+
+            this.renderUpload.call(this);
+
+            return this;
+        }
+
+        renderUpload() {
+            const $dropzone = this.$('.dropzone');
+            const $inputReference = this.$('#inputReference');
+
+            this.updateSelectedFileLabel();
+
+            $inputReference
+                .on('change', e => {
+                    const file = e.target.files[0];
+                    if (file && this.isInputValid(file)) {
+                        this.setImage(file);
+                    }
                 });
-                this.$el.html(template);
 
-                if (this.filename){
-                    this.model.input.set('ui.name', this.filename);
-                    this.updateSelectedFileLabel();
-                    this.updatePreviewBG(this.filename);
-                }
+            $dropzone
+                .on('drop', e => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const files = e.originalEvent.dataTransfer.files;
+                    const file = files[0];
 
-                this.$('.shared-flashmessages')
-                    .html(this.children.flashMessages.render().el)
-                    .append(this.children.flashMessagesLegacy.render().el);
+                    // check file amount
+                    if (files.length > 1) {
+                        this.collection.flashMessages.reset([{
+                            key: 'tooManyFiles',
+                            type: 'error',
+                            html: _('Too many files. Just one, please and thanks.').t()
+                        }]);
 
-                this.renderUpload.call(this);
+                        return false;
+                    }
 
-                return this;
-            },
+                    if (file && this.isInputValid(file)) {
+                        this.setImage(file);
+                    }
+                })
+                .on('dragover', e => {
+                    e.preventDefault();
+                });
+        }
 
-            renderUpload: function(){
-                var that = this;
-                var dropzone = this.$('.dropzone');
-                var inputReference = this.$('#inputReference');
-                var file;
-                this.updateSelectedFileLabel();
+        setImage(file) {
+            const newFileName = file.name.split(' ').join('_');
 
-                inputReference
-                    .on('change', function(e){
-                        file = e.target.files[0];
-                        if (file && that.isInputValid(file)) {
-                            that.setImage(file);
-                        }
-                    });
+            this.collection.flashMessages.reset();
+            this.model.input.set('ui.name', newFileName);
+            this.updateSelectedFileLabel();
+            this.updatePreview(file, newFileName);
+            this.startUploading(file, newFileName);
+        }
 
-                dropzone
-                    .on('drop', function(e){
-                        e.stopPropagation();
-                        e.preventDefault();
-                        var files = e.originalEvent.dataTransfer.files,
-                            file = files[0];
+        updatePreview(file, filename) {
+            const reader = new FileReader();
 
-                        // check file amount
-                        if (files.length > 1) {
-                            that.collection.flashMessages.reset([{
-                                key: 'tooManyFiles',
-                                type: 'error',
-                                html: _('Too many files. Just one, please and thanks.').t()
-                            }]);
-                            return false;
-                        } 
+            this.model.tour.entry.content.set(this.options.imageAttrName, filename);
+            reader.readAsDataURL(file);
+        }
 
-                        if (file && that.isInputValid(file)) {
-                            that.setImage(file);
-                        }
-                    })
-                    .on('dragover', function (e) {
-                        e.preventDefault();
-                    });
-            },
+        startUploading(file, filename) {
+            if (window.FormData) {
+                const formdata = new FormData();
+                formdata.append('image', file);
+                formdata.append('filename', filename);
+                formdata.append('tourName', this.model.tour.entry.get('name'));
 
-            setImage: function(file) {
-                this.collection.flashMessages.reset();
-                var newFileName = file.name.split(' ').join('_');
-                this.model.input.set('ui.name', newFileName);
-                this.updateSelectedFileLabel();
-                this.updatePreview(file, newFileName);
-                this.startUploading(file, newFileName);
-            },
+                $.ajax({
+                    url: '/en-US/custom/tour_makr/upload/',
+                    type: 'POST',
+                    data: formdata,
+                    processData: false,
+                    contentType: false,
+                }).done(() => {
+                    this.updatePreviewBG(filename);
+                });
+            }
+        }
 
-            updatePreview: function(file, filename) {
-                var that = this,
-                    reader = new FileReader();
+        isInputValid(file) {
+            // check file size
+            if (file.size > MAX_FILE_SIZE) {
+                const maxFileSizeMb = Math.floor(MAX_FILE_SIZE/1024/1024);
+                const fileSizeMb = file.size/1024/1024;
+                const fileSizeMbFixed = fileSizeMb.toFixed(2);
 
-                this.model.tour.entry.content.set(this.options.imageAttrName,  filename);
-                reader.readAsDataURL(file);
-            },
+                this.collection.flashMessages.reset([{
+                    key: 'fileTooLarge',
+                    type: 'error',
+                    html: splunkUtil.sprintf(
+                        _('File too large. The file selected is %sMb. Maximum file size is %sMb').t(),
+                        fileSizeMbFixed,
+                        maxFileSizeMb
+                    ),
+                }]);
 
-            startUploading: function(file, filename) {
-                var that = this;
+                return false;
+            }
 
-                if (window.FormData) {
-                    formdata = new FormData();
-                    formdata.append("image", file);
-                    formdata.append("filename", filename);
-                    formdata.append("tourName", this.model.tour.entry.get('name'));
+            // check if it's an image
+            if (file.type.indexOf('image') == -1) {
+                this.collection.flashMessages.reset([{
+                    key: 'notAnImage',
+                    type: 'error',
+                    html: _('This file is not an image!').t(),
+                }]);
 
-                    $.ajax({
-                        url: "/en-US/custom/tour_makr/upload/",
-                        type: "POST",
-                        data: formdata,
-                        processData: false,
-                        contentType: false,
-                        success: function (res) {
-                            that.updatePreviewBG(filename);
-                        },
-                        error: function(res){
-                            
-                        }
-                    });
-                }
-            },
+                return false;
+            }
 
-            isInputValid: function(file){
-                // check file size
-                if (file.size > this.maxFileSize){
-                    var maxFileSizeMb = Math.floor(this.maxFileSize/1024/1024),
-                        fileSizeMb = file.size/1024/1024,
-                        fileSizeMbFixed = fileSizeMb.toFixed(2);
+            return true;
+        }
 
-                    this.collection.flashMessages.reset([{
-                        key: 'fileTooLarge',
-                        type: 'error',
-                        html: splunkUtil.sprintf(_('File too large. The file selected is %sMb. Maximum file size is %sMb').t(), fileSizeMbFixed, maxFileSizeMb)
-                    }]);
-                    return false;
-                }
+        resetProgressBar() {
+            this.finished = false;
+            this.updateProgressBar();
+            this.$('.progress').hide();
+        }
 
-                // check if it's an image
-                if (file.type.indexOf('image') == -1) {
-                    this.collection.flashMessages.reset([{
-                        key: 'notAnImage',
-                        type: 'error',
-                        html: _('This file is not an image!').t()
-                    }]);
-                    return false;
-                }
+        updateProgressBar(progress = 0, text = '', spin = false) {
+            if (progress === 100 && this.finished === false) {
+                text = _('Generating data preview...').t();
+                spin = true;
+            }
+            const $bar = this.$('.progress-bar').css('width', progress+'%');
+            $bar.find('.sr-only').html(text);
 
-                return true;
-            },
+            if (spin === true) {
+                $bar.addClass('progress-striped active');
+            } else if (spin === false) {
+                $bar.removeClass('progress-striped active');
+            }
+        }
 
-            resetProgressBar: function(){
-                this.finished = false;
-                this.updateProgressBar(0, '', false);
-                this.$('.progress').hide();
-            },
+        updateSelectedFileLabel() {
+            const filename = this.model.input.get('ui.name');
+            if (filename) {
+                this.$('.source-label').text(filename);
+            } else {
+                this.$('.source-label').text(_('No file selected').t());
+            }
+        }
 
-            updateProgressBar: function(progress, text, spin){
-                if(progress === 100 && this.finished === false){
-                    text = _('Generating data preview...').t();
-                    spin = true;
-                }
-                var $bar = this.$('.progress-bar').css('width', progress+'%');
-                $bar.find('.sr-only').html(text);
+        updatePreviewBG(imgName) {
+            this.$('.preview-tile').text('').css('background', 'url(' + this.imgDest + '/' + imgName + ')');
+        }
 
-                if(spin === true){
-                    $bar.addClass('progress-striped active');
-                }else if(spin === false){
-                    $bar.removeClass('progress-striped active');
-                }
-
-            },
-
-            updateSelectedFileLabel: function() {
-                var filename = this.model.input.get('ui.name');
-                if (filename) {
-                    this.$('.source-label').text(filename);
-                } else {
-                    this.$('.source-label').text(_('No file selected').t());
-                }
-            },
-
-            updatePreviewBG: function(imgName) {
-                this.$('.preview-tile').text('').css('background', 'url(' + this.imgDest + '/' + imgName + ')');
-            },
-        });
+        templateMain() {
+            return template;
+        }
     }
-);
+});

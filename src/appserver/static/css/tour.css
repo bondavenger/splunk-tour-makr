@@ -1,6 +1,12 @@
 .navbar-splunkbar {
     position: relative;
 }
+.dashboard-header {
+    padding: 20px;
+    background-color: steelblue;
+    color: #FFF;
+    border-bottom: 1px solid #CCC;
+}
 .touromatic {
     padding: 0 30px 30px;
 }
@@ -58,6 +64,7 @@ p.tour-id {
     width: 250px;
     height: 250px;
     overflow: hidden;
+    background-size: cover;
 }
 .tour-item-container .info-container {
     background: rgba(0, 0, 0, 0.6);
@@ -181,6 +188,7 @@ p.tour-id {
     height: 250px;
     position: relative;
     overflow: hidden;
+    background-size: cover;
 }
 .image-tile .image-container .info-container,
 .add-image .image-container .info-container {
@@ -329,15 +337,36 @@ p.tour-id {
     background: #333;
     border: 1px solid #CCC;
     color: #EEE;
-    position: absolute;
-    right: 20px;
-    top: 20px;
-}
-.tour-button.img-back {
-    right: 130px;
+    margin: 10px 5px 20px 0;
 }
 button.button.tour-button[disabled] {
     background: #CCC;
+}
+.tour-button.save {
+    margin-left: 345px;
+}
+.success-box {
+    position: fixed;
+    top: 300px;
+    left: 0;
+    padding: 30px 0;
+    z-index: 100000;
+    border: 1px solid #DDD;
+    font-size: 19px;
+    background: cadetblue;
+    width: 100%;
+    text-align: center;
+    color: #FFF;
+    opacity: .75;
+    display: none;
+}
+.error-box {
+    width: 25%;
+    background: crimson;
+    color: #FFF;
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    display: none;
 }
 a.back {
     margin-top: 10px;
@@ -506,4 +535,7 @@ header.hidden {
     transition: .5s;
     margin-top: -40px;
     margin-bottom: 40px;
+}
+.alert-error {
+    display: none;
 }

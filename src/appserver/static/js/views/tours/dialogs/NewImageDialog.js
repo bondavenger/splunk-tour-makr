@@ -1,85 +1,78 @@
 define([
-        'underscore',
-        'backbone',
-        'module',
-        'views/shared/Modal',
-        'views/shared/controls/ControlGroup',
-        'views/shared/FlashMessages',
-        'app/views/tours/image/FileUpload',
-        'uri/route',
-        'util/splunkd_utils'
-    ],
-    function(
-        _,
-        Backbone,
-        module,
-        Modal,
-        ControlGroup,
-        FlashMessage,
-        TourFileUploader,
-        route,
-        splunkd_utils
-        ) {
-        return Modal.extend({
-            moduleId: module.id,
-            initialize: function(options) {
-                Modal.prototype.initialize.apply(this, arguments);
+    'underscore',
+    'views/shared/Modal',
+    'views/shared/controls/ControlGroup',
+    'app/views/tours/image/FileUpload',
+    'views/shared/FlashMessages',
+], function(
+    _,
+    Modal,
+    ControlGroup,
+    TourFileUploader,
+    FlashMessage
+) {
+    return class NewImageModal extends Modal {
+        initialize(options) {
+            super.initialize(options);
 
-                this.children.flashMessage = new FlashMessage({ model: this.model.inmem });
-                this.imgNum = this.options.imgNum || this.options.order;
-                this.isEdit = this.options.isEdit || false;
-                this.modalTitle = (this.isEdit) ? _('Edit Slide').t() : _('New Slide').t();
+            this.children.flashMessage = new FlashMessage({ model: this.model.inmem });
+            this.imgNum = this.options.imgNum || this.options.order;
+            this.isEdit = this.options.isEdit || false;
+            this.modalTitle = (this.isEdit) ? _('Edit Slide').t() : _('New Slide').t();
 
-                this.children.titleField = new ControlGroup({
-                    controlType: 'Textarea',
-                    controlOptions: {
-                        modelAttribute: 'imageCaption' + this.imgNum,
-                        model: this.model.tour.entry.content
-                    },
-                    label: _('Caption Text').t()
-                });
-
-                this.children.tourFileUpload = new TourFileUploader({
-                    imageAttr: 'imageData' + this.imgNum,
-                    imageAttrName: 'imageName' + this.imgNum,
-                    model: this.model
-                });
-            },
-
-            events: $.extend({}, Modal.prototype.events, {
-                'click .btn-primary': function(e) {
-                    this.model.tour.save({}, {
-                        success: function(model, response) {
-                            this.hide();
-                        }.bind(this)
-                    });
-
-                    e.preventDefault();
+            this.children.titleField = new ControlGroup({
+                controlType: 'Textarea',
+                controlOptions: {
+                    modelAttribute: 'imageCaption' + this.imgNum,
+                    model: this.model.tour.entry.content,
                 },
-                'click .cancel': function(e) {
-                    this.model.tour.entry.content.unset('imageCaption' + this.imgNum);
-                    this.model.tour.entry.content.unset('imageName' + this.imgNum);
-                }
-            }),
+                label: _('Caption Text').t(),
+            });
 
-            render : function() {
-                this.$el.html(Modal.TEMPLATE);
+            this.children.tourFileUpload = new TourFileUploader({
+                imageAttr: 'imageData' + this.imgNum,
+                imageAttrName: 'imageName' + this.imgNum,
+                model: this.model,
+            });
+        }
 
-                this.$(Modal.HEADER_TITLE_SELECTOR).html(_(this.modalTitle).t());
+        events() {
+            return $.extend({}, Modal.prototype.events, {
+                'click .btn-primary': 'save',
+                'click .cancel': 'cancel',
+            });
+        }
 
-                this.children.flashMessage.render().prependTo(this.$(Modal.BODY_SELECTOR));
+        save(e) {
+            e.preventDefault();
 
-                this.$(Modal.BODY_SELECTOR).append(Modal.FORM_HORIZONTAL);
+            this.model.tour.save()
+            .done(() => {
+                this.hide();
+            });
+        }
 
-                this.$(Modal.BODY_SELECTOR).append(this.children.tourFileUpload.render().el);
-                
-                this.$(Modal.BODY_SELECTOR).append('<div class="caption-text"></div>');
-                this.$('.caption-text').append(this.children.titleField.render().el);
+        cancel(e) {
+            e.preventDefault();
+            this.model.tour.entry.content.unset('imageCaption' + this.imgNum);
+            this.model.tour.entry.content.unset('imageName' + this.imgNum);
+        }
 
-                this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_CANCEL);
-                this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_SAVE);
+        render() {
+            this.$el.html(Modal.TEMPLATE);
+            this.$(Modal.HEADER_TITLE_SELECTOR).html(_(this.modalTitle).t());
 
-                return this;
-            }
-        });
-    });
+            this.children.flashMessage.render().prependTo(this.$(Modal.BODY_SELECTOR));
+
+            this.$(Modal.BODY_SELECTOR).append(Modal.FORM_HORIZONTAL);
+            this.$(Modal.BODY_SELECTOR).append(this.children.tourFileUpload.render().el);
+            this.$(Modal.BODY_SELECTOR).append('<div class="caption-text"></div>');
+            this.$('.caption-text').append(this.children.titleField.render().el);
+
+            this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_CANCEL);
+            this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_SAVE);
+
+            return this;
+        }
+    }
+});

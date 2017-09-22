@@ -2,261 +2,248 @@ define(
     [
         'jquery',
         'underscore',
-        'module',
-        'backbone',
         'views/Base',
         'models/services/data/ui/Tour',
         'app/views/tours/interactive/Step',
-        'views/shared/tour/InteractiveTour',
-        'uri/route',
         'splunk.util',
-        'util/url',
-        'app/contrib/dom.outline'
+        'app/contrib/dom.outline',
     ],
     function(
         $,
         _,
-        module,
-        Backbone,
         BaseView,
         TourModel,
         InteractiveStep,
-        InteractiveTour,
-        route,
         splunk_util,
-        url_util,
         outline
     ) {
     
-        return BaseView.extend({
-            moduleId: module.id,
-            className: 'interactive-menu',
-            initialize: function(options) {
-                BaseView.prototype.initialize.call(this, options);
+    return class ImageItem extends BaseView {
+        className() {
+            return 'interactive-menu';
+        }
 
-                if (!this.model.tour) {
-                    this.model.tour = new TourModel();
-                    this.model.tour.entry.content.set('type', 'interactive');
-                }
+        initialize(options) {
+            super.initialize(options);
 
-                this.numSteps = this.model.tour.getNumSteps();
-                this.curStep = 0;
-                this.imgUrl = splunk_util.make_url('/static/img');
-            },
+            if (!this.model.tour) {
+                this.model.tour = new TourModel();
+                this.model.tour.entry.content.set('type', 'interactive');
+            }
 
-            events: {
-                'click .run-tour': function(e) {
+            this.numSteps = this.model.tour.getNumSteps();
+            this.curStep = 0;
+            this.imgUrl = splunk_util.make_url('/static/img');
+        }
+
+        events() {
+            return {
+                'click .run-tour': e => {
                     e.preventDefault();
                     this.runTour();
                 },
-                'click .back': function(e) {
+                'click .back': e => {
                     e.preventDefault();
                     this.closeMenu();
                 },
-                'click .close': function(e) {
+                'click .close': e => {
                     e.preventDefault();
                     this.closeMenu();
                 },
-                'click .add-step': function(e) {
+                'click .add-step': e => {
                     e.preventDefault();
                     this.addNewStep();
                 }
-            },
+            }
+        }
 
-            createTourName: function(label) {
-                var name = label.split(' ').join('_').replace(/[;:'",/\\]+/g, '').toLowerCase();
-                return name;
-            },
+        runTour() {
+            let qsObj = {};
+            const urlData = this.model.tour.getTourURLData();
+            const tourApp = this.model.tour.entry.content.get('other-app') || 'search';
+            const tourPage = this.model.tour.getTourPage() || 'search';
 
-            runTour: function() {
-                var qsObj = {},
-                    urlData = this.model.tour.getTourURLData(),
-                    tourApp = this.model.tour.entry.content.get('other-app') || 'search',
-                    tourPage = this.model.tour.getTourPage() || 'search',
-                    qs, tourRunPage;
+            if (urlData) {
+                const decodedQS = decodeURIComponent(urlData);
+                const qs = decodedQS.substring(decodedQS.indexOf('?'), decodedQS.length);
+                qsObj = splunk_util.queryStringToProp(qs);
+            }
 
-                    if (urlData) {
-                        var decodedQS = decodeURIComponent(urlData);
-                        qs = decodedQS.substring(decodedQS.indexOf('?'), decodedQS.length);
-                        qsObj = splunk_util.queryStringToProp(qs);
-                    }
+            qsObj.tour = this.model.tour.getName();
 
-                    qsObj.tour = this.model.tour.getName();
+            const tourRunPage = splunk_util.make_full_url('app/' + tourApp + '/' + tourPage, qsObj);
 
-                tourRunPage = splunk_util.make_full_url('app/' + tourApp + '/' + tourPage, qsObj);
+            window.open(tourRunPage, '_blank');
+        }
 
-                window.open(tourRunPage, '_blank');
-            },
+        addStep(step) {
+            this.curStep++;
 
-            addStep: function(step) {
-                this.curStep++;
-                var newStep = this.children['step_' + this.curStep] = new InteractiveStep({
-                    model: {
-                        tour: this.model.tour
-                    },
-                    caption: $(step.intro).text(),
-                    element: step.element,
-                    stepNum: this.curStep
-                });
-                this.addListeners(newStep);
-                newStep.render().appendTo(this.$('.steps'));
-            },
+            const newStep = this.children['step_' + this.curStep] = new InteractiveStep({
+                model: {
+                    tour: this.model.tour,
+                },
+                caption: $(step.intro).text(),
+                element: step.element,
+                stepNum: this.curStep,
+            });
 
-            addNewStep: function() {
-                this.numSteps++;
+            newStep.render().appendTo(this.$('.steps'));
+            this.addListeners(newStep);
+        }
 
-                var step = this.children['step_' + this.numSteps] = new InteractiveStep({
-                    model: {
-                        tour: this.model.tour
-                    },
-                    stepNum: this.numSteps
-                });
-                this.addListeners(step);
-                step.render().appendTo(this.$('.steps'));
-            },
+        addNewStep() {
+            this.numSteps++;
 
-            removeStep: function(step) {
-                for(var i = step.stepNum; i < this.numSteps + 1; i++) {
-                    var curStep = this.children['step_' + i];
-                    if (i == this.numSteps) {
-                        this.model.tour.entry.content.set('stepText' + i, '');
-                        this.model.tour.entry.content.set('stepElement' + i, '');
-                    } else if (curStep) {
-                        this._doTheTimeWarp(i);
-                    }
-                }
+            const step = this.children['step_' + this.numSteps] = new InteractiveStep({
+                model: {
+                    tour: this.model.tour,
+                },
+                stepNum: this.numSteps,
+            });
 
-                // Here we have to clone, destroy, and recreate the tour
-                // to preserve the integrity of how attributes are set.
-                var newModel = this.model.tour.clone();
-                newModel.unset('id');
-                newModel.entry.content.set({
-                    name: newModel.entry.get('name')
-                });
+            step.render().appendTo(this.$('.steps'));
+            this.addListeners(step);
+        }
 
-                this.model.tour.destroy({
-                    success: function(e) {
-                        this.model.tour = newModel;
-                        this.model.tour.save({}, {
-                            data: {
-                                app: 'tour_makr',
-                                owner: 'nobody'
-                            },
-                            success: function() {
-                                this.numSteps--;
-                                this.curStep = 0;
-                                this.$('.step').remove();
-                                this.renderSteps(true);
-                            }.bind(this)
-                        });
-                    }.bind(this),
-                    error: function(err) {
-                        console.log('Server Error')
-                    }
-                });
-            },
-
-            _doTheTimeWarp: function(i) {
-                var newCaption = this.model.tour.entry.content.get('stepText' + (i + 1)),
-                    newEl = this.model.tour.entry.content.get('stepElement' + (i + 1));
-
-                this.model.tour.entry.content.set('stepText' + i, newCaption);
-                this.model.tour.entry.content.set('stepElement' + i, newEl);
-            },
-
-            addListeners: function(step) {
-                this.listenTo(step, 'getElement', function() {
-                    this.startHighlight(step);
-                });
-                this.listenTo(step, 'removeStep', function() {
-                    this.removeStep(step);
-                });
-            },
-
-            renderSteps: function(timeWarped) {
-                if (this.numSteps > 0) {
-                    var steps = this.model.tour.getSteps();
-                    _.each(steps, function(step, index) {
-                        if (timeWarped && (index >= this.numSteps)) {
-                            if (index === 0) {
-                                this.addNewStep();
-                            } else {
-                                return false;
-                            }
-                        } else {
-                            this.addStep(step);
-                        }
-                    }, this);
+        removeStep(step) {
+            for (let i = step.stepNum; i < this.numSteps + 1; i++) {
+                if (i === this.numSteps) {
+                    this.model.tour.entry.content.unset('stepText' + i);
+                    this.model.tour.entry.content.unset('stepElement' + i);
                 } else {
-                    this.addNewStep();
+                    this._doTheTimeWarp(i);
                 }
-            },
+            }
 
-            startHighlight: function(step) {
-                var elClick = function (el) {
-                    var classList = '';
-                    for (var i = 0; i < el.classList.length; i++) {
-                        classList += '.' + el.classList[i];
-                    }
-                    var clickedItem = el.tagName + classList,
-                        element = clickedItem.toLowerCase();
+            // Here we have to clone, destroy, and recreate the tour
+            // to preserve the integrity of how attributes are set.
+            const newModel = this.model.tour.clone();
+            newModel.unset('id');
+            newModel.entry.content.set({
+                name: newModel.entry.get('name')
+            });
 
-                    console.log('Clicked element:', element);
-                    step.setStepElement(element);
-                }.bind(this);
-
-                this.myDomOutline = $('iframe')[0].contentWindow.DomOutline({ onClick: elClick });
-                this.myDomOutline.start();
-                this.showHighlightMessage();
-            },
-
-            closeMenu: function() {
-                $('body').removeClass('open-right');
-                $('header').removeClass('hidden');
-                this.$el.removeClass('open');
-                if (this.myDomOutline) {
-                    this.myDomOutline.stop();
-                }
-                this.trigger('int-menu-closed');
-            },
-
-            showHighlightMessage: function() {
-                var $template = $(this.templateHighlightMessage);
-                this.$el.append($template[0]);
-
-                $('.highlight-message').fadeIn(500, function() {
-                    $('.highlight-message').fadeOut(500, function() {
-                        $('.highlight-message').remove();
+            this.model.tour.destroy({ silent: true })
+                .done(() => {
+                    this.model.tour = newModel;
+                    this.model.tour.save({}, {
+                        data: {
+                            app: 'tour_makr',
+                            owner: 'nobody',
+                        }
+                    }).done(() => {
+                        this.numSteps--;
+                        this.curStep = 0;
+                        this.$('.step').remove();
+                        this.renderSteps(true);
                     });
                 });
-            },
+        }
 
-            render: function() {
-                this.$el.html(this.compiledTemplate({
-                    tourId: this.model.tour.getName(),
-                    tourLabel: this.model.tour.getLabel()
-                }));
-                this.renderSteps();
+        _doTheTimeWarp(i) {
+            const newCaption = this.model.tour.entry.content.get('stepText' + (i + 1));
+            const newEl = this.model.tour.entry.content.get('stepElement' + (i + 1));
 
-                return this;
-            },
+            this.model.tour.entry.content.set('stepText' + i, newCaption);
+            this.model.tour.entry.content.set('stepElement' + i, newEl);
+        }
 
-            template: '\
-                <div class="interactive-tour-container">\
-                    <h3>Interactive Tour Builder <a href="#" class="close">Close</a></h3>\
-                    <div class="steps-container">\
-                        <h4 class="tour-label-head"><%- tourLabel %></h4>\
-                        <p>tour id: <span class="tour-id"><%- tourId %></span> | <a href="#" class="run-tour">Run tour in new tab</a></p>\
-                        <div class="steps"></div>\
-                        <a href="#" class="btn btn-primary add-step">+ Add Step</a>\
-                        <a href="#" class="back">Back to tour manager >></a>\
-                    </div>\
-                </div>\
-            ',
+        addListeners(step) {
+            this.listenTo(step, 'getElement', () => {
+                this.startHighlight(step);
+            });
+            this.listenTo(step, 'removeStep', () => {
+                this.removeStep(step);
+            });
+        }
 
-            templateHighlightMessage: '\
-                <div class="highlight-message">Outline Mode Active</div>\
-            '
-        });
+        renderSteps(timeWarped) {
+            if (this.numSteps > 0) {
+                const steps = this.model.tour.getSteps();
+                steps.forEach((step, index) => {
+                    if (timeWarped && (index >= this.numSteps)) {
+                        if (index === 0) {
+                            this.addNewStep();
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        this.addStep(step);
+                    }
+                });
+            } else {
+                this.addNewStep();
+            }
+        }
+
+        startHighlight(step) {
+            const elClick = el => {
+                let classList = '';
+                for (let i = 0; i < el.classList.length; i++) {
+                    classList += '.' + el.classList[i];
+                }
+
+                const clickedItem = el.tagName + classList;
+                const element = clickedItem.toLowerCase();
+                step.setStepElement(element);
+            };
+
+            this.myDomOutline = $('iframe')[0].contentWindow.DomOutline({ onClick: elClick });
+            this.myDomOutline.start();
+            this.showHighlightMessage();
+        }
+
+        closeMenu() {
+            $('body').removeClass('open-right');
+            $('header').removeClass('hidden');
+            this.$el.removeClass('open');
+            if (this.myDomOutline) {
+                this.myDomOutline.stop();
+            }
+            this.trigger('int-menu-closed');
+        }
+
+        showHighlightMessage() {
+            const $template = $(this.templateHighlightMessage());
+            this.$el.append($template[0]);
+
+            $('.highlight-message').fadeIn(500, () => {
+                $('.highlight-message').fadeOut(500, () => {
+                    $('.highlight-message').remove();
+                });
+            });
+        }
+
+        render() {
+            this.$el.html(_.template(this.templateMain(), {
+                tourId: this.model.tour.getName(),
+                tourLabel: this.model.tour.getLabel()
+            }));
+            this.renderSteps();
+
+            return this;
+        }
+
+        templateMain() {
+            return `
+                <div class="interactive-tour-container">
+                    <h3>Interactive Tour Builder <a href="#" class="close">Close</a></h3>
+                    <div class="steps-container">
+                        <h4 class="tour-label-head"><%- tourLabel %></h4>
+                        <p>tour id: <span class="tour-id"><%- tourId %></span> | <a href="#" class="run-tour">Run tour in new tab</a></p>
+                        <div class="steps"></div>
+                        <a href="#" class="btn btn-primary add-step">+ Add Step</a>
+                        <a href="#" class="back">Back to tour manager >></a>
+                    </div>
+                </div>
+            `;
+        }
+
+        templateHighlightMessage() {
+            return `
+                <div class="highlight-message">Outline Mode Active</div>
+            `;
+        }
     }
-);
+});

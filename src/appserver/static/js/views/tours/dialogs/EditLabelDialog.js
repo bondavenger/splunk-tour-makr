@@ -1,72 +1,73 @@
 define([
-        'underscore',
-        'backbone',
-        'module',
-        'views/shared/Modal',
-        'views/shared/controls/ControlGroup',
-        'views/shared/FlashMessages'
-    ],
-    function(
-        _,
-        Backbone,
-        module,
-        Modal,
-        ControlGroup,
-        FlashMessage
-        ) {
-        return Modal.extend({
-            moduleId: module.id,
-            initialize: function(options) {
-                Modal.prototype.initialize.apply(this, arguments);
+    'underscore',
+    'views/shared/Modal',
+    'views/shared/controls/ControlGroup',
+    'views/shared/FlashMessages',
+], function(
+    _,
+    Modal,
+    ControlGroup,
+    FlashMessage
+) {
+    return class LabelEditor extends Modal {
+        initialize(options) {
+            super.initialize(options);
 
-                this.originalLabel = this.model.tour.getLabel();
+            this.originalLabel = this.model.tour.getLabel();
 
-                this.children.flashMessage = new FlashMessage({ model: this.model.inmem });
+            this.children.flashMessage = new FlashMessage({ model: this.model.inmem });
 
-                this.children.titleField = new ControlGroup({
-                    controlType: 'Text',
-                    controlOptions: {
-                        modelAttribute: 'label',
-                        model: this.model.tour.entry.content,
-                        placeholder: this.originalLabel
-                    },
-                    label: _('Label').t(),
-                    required: true,
-                    validate: true
-                });
-                this.activate();
-            },
-
-            events: $.extend({}, Modal.prototype.events, {
-                'click .btn-primary': function(e) {
-                    this.model.tour.save({}, {
-                        validate: true,
-                        success: function(model, response) {
-                            this.hide();
-                        }.bind(this)
-                    });
-                    e.preventDefault();
+            this.children.titleField = new ControlGroup({
+                controlType: 'Text',
+                controlOptions: {
+                    modelAttribute: 'label',
+                    model: this.model.tour.entry.content,
+                    placeholder: this.originalLabel,
                 },
-                'click .cancel': function(e) {
-                    this.model.tour.entry.content.set('label', this.originalLabel);
-                }
-            }),
+                label: _('Label').t(),
+                required: true,
+                validate: true,
+            });
 
-            render : function() {
-                this.$el.html(Modal.TEMPLATE);
+            this.activate();
+        }
 
-                this.$(Modal.HEADER_TITLE_SELECTOR).html(_("Edit Label").t());
+        events() {
+            return $.extend({}, Modal.prototype.events, {
+                'click .btn-primary': 'save',
+                'click .cancel': 'cancel',
+            });
+        }
 
-                this.children.flashMessage.render().prependTo(this.$(Modal.BODY_SELECTOR));
+        save(e) {
+            e.preventDefault();
 
-                this.$(Modal.BODY_SELECTOR).append(Modal.FORM_HORIZONTAL);
+            this.model.tour.save({}, {
+                validate: true,
+            }).done(() => {
+                this.hide();
+            });
+        }
 
-                this.children.titleField.render().appendTo(this.$(Modal.BODY_FORM_SELECTOR));
+        cancel(e) {
+            e.preventDefault();
+            this.model.tour.entry.content.set('label', this.originalLabel);
+        }
 
-                this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_CANCEL);
-                this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_SAVE);
+        render() {
+            this.$el.html(Modal.TEMPLATE);
+            this.$(Modal.HEADER_TITLE_SELECTOR).html(_('Edit Label').t());
 
-                return this;
-            }
-        });
-    });
+            this.children.flashMessage.render().prependTo(this.$(Modal.BODY_SELECTOR));
+
+            this.$(Modal.BODY_SELECTOR).append(Modal.FORM_HORIZONTAL);
+
+            this.children.titleField.render().appendTo(this.$(Modal.BODY_FORM_SELECTOR));
+
+            this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_CANCEL);
+            this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_SAVE);
+
+            return this;
+        }
+    }
+});
