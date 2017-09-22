@@ -149,7 +149,7 @@ define([
                     this.hide();
                 }).fail(response => {
                     if (response.status === 409) {
-                        console.log('already exists')
+                        this.showError(_(`A tour with the id '${this.model.tour.entry.content.get('name')}' already exists.`).t());
                     }
                 });
             }
