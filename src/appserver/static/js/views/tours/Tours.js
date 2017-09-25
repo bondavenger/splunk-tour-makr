@@ -7,7 +7,6 @@ define([
     'app/views/tours/interactive/Item',
     'app/views/tours/dialogs/NewImageTourDialog',
     'app/views/tours/dialogs/NewIntTourDialog',
-    'app/views/tours/dialogs/ConfirmModal',
 ], function(
     $,
     _,
@@ -16,13 +15,11 @@ define([
     ImageTourItem,
     InteractiveTourItem,
     NewTourDialog,
-    NewIntDialog,
-    ConfirmModal
+    NewIntDialog
 ) {
     return class ToursView extends BaseView {
         events() {
             return {
-                'click .remove': 'removeConfirm',
                 'click .user-image-tours .tour-tile .edit': e => {
                     e.preventDefault();
                     this.trigger('edit', $(e.currentTarget).parents('.tour-tile').data('name'));
@@ -67,16 +64,6 @@ define([
             }
         }
 
-        removeConfirm(e) {
-            e.preventDefault();
-            this.confirm = new ConfirmModal();
-            this.confirm.render().appendTo($('body'));
-            this.confirm.show();
-            this.listenTo(this.confirm, 'ok', this.removeTour);
-
-            this.removeTile = $(e.currentTarget).parents('.tour-tile');
-        }
-
         newEditIntTour(isNew) {
             this.model.tour = (isNew) ? new TourModel() : this.model.tour;
 
@@ -91,19 +78,6 @@ define([
                 }
             });
             this.children.newTour.render().appendTo($('body')).show();
-        }
-
-        removeTour() {
-            this.model.tour = this.collection.tours.getTourModel(this.removeTile.data('name'));
-
-            if (this.model.tour) {
-                this.model.tour.destroy();
-                this.model.tour.clear({ silent: true });
-            }
-
-            this.removeTile.fadeOut(1000, () => {
-                this.removeTile.remove();
-            });
         }
 
         render() {

@@ -5,6 +5,7 @@ define([
     'module',
     'views/Base',
     'app/views/tours/Utils',
+    'app/views/tours/dialogs/ConfirmModal',
     'splunk.util'
 ], function(
     $,
@@ -13,6 +14,7 @@ define([
     module,
     BaseView,
     Utils,
+    ConfirmModal,
     splunkUtil
 ) {
     return class IntTourItem extends BaseView {
@@ -29,6 +31,12 @@ define([
             return {
                 'data-name': this.model.tour.entry.get('name'),
             };
+        }
+
+        events() {
+            return {
+                'click .remove': 'removeConfirm',
+            }
         }
 
         startListening() {
@@ -50,6 +58,21 @@ define([
             qsObj.tour = this.model.tour.getName();
 
             return splunkUtil.make_full_url('app/' + tourApp + '/' + tourPage, qsObj);
+        }
+
+        removeTour() {
+            this.model.tour.destroy();
+            this.$el.fadeOut(1000, () => {
+                this.$el.remove();
+            });
+        }
+
+        removeConfirm(e) {
+            e.preventDefault();
+            this.confirm = new ConfirmModal();
+            this.confirm.render().appendTo($('body'));
+            this.confirm.show();
+            this.listenTo(this.confirm, 'ok', this.removeTour);
         }
 
         render() {

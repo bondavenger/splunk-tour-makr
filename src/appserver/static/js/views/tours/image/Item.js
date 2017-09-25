@@ -5,6 +5,7 @@ define([
     'module',
     'views/Base',
     'app/views/tours/Utils',
+    'app/views/tours/dialogs/ConfirmModal',
     'splunk.util',
 ], function(
     $,
@@ -13,6 +14,7 @@ define([
     module,
     BaseView,
     Utils,
+    ConfirmModal,
     splunkUtil
 ) {
     return class ImageItem extends BaseView {
@@ -30,11 +32,27 @@ define([
             return {
                 'mouseenter .tour-item-container': 'toggleActive',
                 'mouseleave .tour-item-container': 'toggleActive',
+                'click .remove': 'removeConfirm',
             }
         }
 
         toggleActive(e) {
             $(e.currentTarget).find('.info-container').toggleClass('active');
+        }
+
+        removeTour() {
+            this.model.tour.destroy();
+            this.$el.fadeOut(1000, () => {
+                this.$el.remove();
+            });
+        }
+
+        removeConfirm(e) {
+            e.preventDefault();
+            this.confirm = new ConfirmModal();
+            this.confirm.render().appendTo($('body'));
+            this.confirm.show();
+            this.listenTo(this.confirm, 'ok', this.removeTour);
         }
 
         render() {
