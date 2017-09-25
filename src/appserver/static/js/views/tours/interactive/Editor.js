@@ -38,18 +38,9 @@ define(
 
         events() {
             return {
-                'click .run-tour': e => {
-                    e.preventDefault();
-                    this.runTour();
-                },
-                'click .back': e => {
-                    e.preventDefault();
-                    this.closeMenu();
-                },
-                'click .close': e => {
-                    e.preventDefault();
-                    this.closeMenu();
-                },
+                'click .run-tour': 'runTour',
+                'click .back': 'closeMenu',
+                'click .close': 'closeMenu',
                 'click .add-step': e => {
                     e.preventDefault();
                     this.addNewStep();
@@ -57,7 +48,8 @@ define(
             }
         }
 
-        runTour() {
+        runTour(e) {
+            e.preventDefault();
             let qsObj = {};
             const urlData = this.model.tour.getTourURLData();
             const tourApp = this.model.tour.entry.content.get('other-app') || 'search';
@@ -194,7 +186,8 @@ define(
             this.showHighlightMessage();
         }
 
-        closeMenu() {
+        closeMenu(e) {
+            e.preventDefault();
             $('body').removeClass('open-right');
             $('header').removeClass('hidden');
             this.$el.removeClass('open');

@@ -1,12 +1,6 @@
 .navbar-splunkbar {
     position: relative;
 }
-.dashboard-header {
-    padding: 20px;
-    background-color: steelblue;
-    color: #FFF;
-    border-bottom: 1px solid #CCC;
-}
 .touromatic {
     padding: 0 30px 30px;
 }

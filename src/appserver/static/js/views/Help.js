@@ -10,16 +10,18 @@ define([
     return class HelpPage extends BaseView {
         events() {
             return {
-                'click .advanced-options': e => {
-                    e.preventDefault();
-                    $('.advanced-options-container').toggleClass('open');
-                }
+                'click .advanced-options': 'openAdvanced',
             }
         }
 
+        openAdvanced(e) {
+            e.preventDefault();
+            this.$('.advanced-options-container').toggleClass('open');
+        }
+
         render() {
-            this.$el.html(this.compiledTemplate());
-            $('.help-body').append(this.$el);
+            this.$el.html(_.template(this.templateMain()));
+            return this;
         }
 
         templateMain() {
@@ -58,12 +60,21 @@ define([
                 <div class="question">Where are the images stored?</div>
                 <div class="answer">For the tours created via this app, the images are stored in the apps static directory:  etc/apps/tour_makr/appserver/static/img/[tourname]</div>
 
-                <div class="question">How do I make a tour launch?</div>
-                <div class="answer">Tours are launched by appending the tour id to the querystring of any url in Splunk. For example, to launch a specific tour on the Reports page, append the querystring: "tour=tour-name". This will launch a tour with the id of "tour-name".</div>
+                <div class="question">How do I launch a tour?</div>
+                <div class="answer">Tours are launched by appending the tour id to the querystring of any url in Splunk. For example:
+                    To launch a tour named <b>tour-foo</b> on the Reports page, use <b>/app/search/reports?tour=tour-foo</b>.
+                </div>
 
                 <div class="question">How do I make a tour auto popup for users?</div>
-                <div class="answer">I can make a tour auto prompt on a page?! But, of course! To do so, all you need to do is name the tour (set the tour id) to the name of the view you\'re going to use it on and append "-tour" to it. For example:
-                    <p>If you want to auto prompt for a tour on the Reports page, the tour stanza name would need to be [reports-tour].</p>
+                <div class="answer">
+                    <p>I can make a tour auto prompt on a page?! But, of course! Here are the steps to do so: (this will involve editing the etc/apps/tour_makr/local/ui-tour.conf file)</p>
+                    <ol>
+                        <li>Name the tour (set the tour id) to the name of the view you\'re going to use it.</li>
+                        <li>Append "-tour" to that name. For example:
+                            <p>If you want to auto prompt for a tour on the Reports page, the tour stanza name would need to be <b>[reports-tour]</b>.</p></li>
+                        <li>Here's the tricky part... We allow users to create tours for enterprise and light instances, so you have to add this info to the tour name. Here's how it looks using the above example:
+                            <p> Use <b>[reports-tour:enterprise]</b> for Enterprise and <b>[reports-tour:lite]</b> for Splunk Light instances.</p></li>
+                    </ol>
                     <ul><b>NOTES:</b>
                         <li> Once a tour has been skipped or viewed by a user, an attribute is set on that tour as viewed. It will no longer prompt a user after.</li>
                         <li> Prompts are per user. </li>

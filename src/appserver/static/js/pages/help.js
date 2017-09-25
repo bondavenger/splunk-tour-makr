@@ -1,3 +1,4 @@
 require(['app/views/Help'], function(HelpView) {
-    var toursHelp = new HelpView();
+    const toursHelp = new HelpView();
+    $('.help-body').append(toursHelp.render().el);
 });

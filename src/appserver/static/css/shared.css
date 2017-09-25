@@ -8,8 +8,10 @@ body {
     background-color: #fff;
 }
 .dashboard-header {
-    padding: 20px 20px 0;
-    margin-bottom: 0;
+    padding: 20px;
+    background-color: steelblue;
+    color: #FFF;
+    border-bottom: 1px solid #CCC;
 }
 .dashboard-row .dashboard-panel .panel-body.html,
 .dashboard-row .dashboard-panel .panel-body.splunk-html {
