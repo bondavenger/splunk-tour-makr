@@ -35,7 +35,6 @@ define([
                 },
                 'click .select-element': e => {
                     e.preventDefault();
-                    e.stopPropagation();
                     this.trigger('getElement', this.stepNum);
                 },
                 'click .remove-step': e => {

@@ -48,8 +48,6 @@ define([
             this.listenTo(this.collection.tours, 'update', tour => {
                 this.collection.tours.fetch({
                     data: {
-                        app: 'tour_makr',
-                        owner: this.model.application.get('owner'),
                         count: -1,
                     }
                 });
@@ -183,8 +181,6 @@ define([
         refreshTours() {
             this.collection.tours.fetch({
                 data: {
-                    app: 'tour_makr',
-                    owner: this.model.application.get('owner'),
                     count: -1
                 }
             }).done(() => {

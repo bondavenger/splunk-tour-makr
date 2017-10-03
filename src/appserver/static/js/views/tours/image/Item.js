@@ -41,11 +41,37 @@ define([
         }
 
         removeTour() {
-            this.model.tour.destroy();
-            this.$el.fadeOut(1000, () => {
-                this.$el.remove();
+            // TODO useTour is updated
+            // const isAuto = this.model.tour.entry.content.get('otherAuto');
+            // const name = this.model.tour.getName();
+            this.model.tour.destroy({ silent: true, wait: true })
+            .done(() => {
+                // TODO useTour is updated
+                // if (isAuto) {
+                //     this.removeAutoTours(name);
+                // }
+                this.$el.fadeOut(1000, () => {
+                    this.$el.remove();
+                });
             });
         }
+
+        // TODO useTour is updated
+        // removeAutoTours(name) {
+        //     const entTour = this.collection.tours.find(model => {
+        //         return (model.getName() === `${name}:enterprise`);
+        //     });
+        //     const lightTour = this.collection.tours.find(model => {
+        //         return (model.getName() === `${name}:lite`);
+        //     });
+
+        //     if (entTour) {
+        //         entTour.destroy({ silent: true, wait: true });
+        //     }
+        //     if (lightTour) {
+        //         lightTour.destroy({ silent: true, wait: true });
+        //     }
+        // }
 
         removeConfirm(e) {
             e.preventDefault();

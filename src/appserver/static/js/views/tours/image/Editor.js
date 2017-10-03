@@ -28,17 +28,15 @@ define([
                 this.imageTotal = this.model.tour.getImageTotal();
                 this.nextImg = this.imageTotal + 1;
             }
-
-            const forceTour = this.model.tour.forceTour();
-            this.model.tour.entry.content.set('forceTour', forceTour);
-            this.children.forceTour = new ControlGroup({
-                controlType: 'SyntheticCheckbox',
-                controlOptions: {
-                    modelAttribute: 'forceTour',
-                    model: this.model.tour.entry.content,
-                },
-                label: _('Force tour').t(),
-            });
+            // TODO autoTour/usetour update
+            // this.children.forceTour = new ControlGroup({
+            //     controlType: 'SyntheticCheckbox',
+            //     controlOptions: {
+            //         modelAttribute: 'forceTour',
+            //         model: this.model.tour.entry.content,
+            //     },
+            //     label: _('Force tour').t(),
+            // });
 
             const skipText = this.model.tour.getSkipLabel();
             this.model.tour.entry.content.set('skipText', skipText);
@@ -172,18 +170,18 @@ define([
                 name: newModel.entry.get('name'),
             });
 
-            this.model.tour.destroy({ silent: true })
-                .done(() => {
-                    this.model.tour = newModel;
-                    this.model.tour.save({}, {
-                        data: {
-                            app: 'tour_makr',
-                            owner: 'nobody',
-                        }
-                    }).done(() => {
-                        this.startListening();
-                    });
+            // TODO useTOUR/autoTour
+            // make sure app is the pre destroyed tour's origin app
+            this.model.tour.destroy({ silent: true, wait: true })
+            .done(() => {
+                this.model.tour = newModel;
+                this.model.tour.save({}, {
+                    data: {
+                        app: 'tour_makr',
+                        owner: 'nobody',
+                    }
                 });
+            });
         }
 
         _doTheTimeWarp(i) {
@@ -257,7 +255,9 @@ define([
             $('.tour-images').sortable('disable').toggleClass('sorting');
             $('.stop-reorder').hide();
             $('.add-image').fadeIn(500);
-            $('.reorder-backdrop').fadeOut();
+            $('.reorder-backdrop').fadeOut(500, () => {
+                $('.reorder-backdrop').toggleClass('in').toggleClass('out');
+            });
 
             setTimeout(() => {
                 this.resetModelOrder();
@@ -286,33 +286,35 @@ define([
                         tourName: this.tourName,
                     });
 
-                    this.$('.tour-images').append(newItem.render().el);
+                    this.$('.tour-images-container').append(newItem.render().el);
                 }
             }
         }
 
         render() {
-            this.$el.html(_.template(this.templateMain(), {
-                label: Utils.makeTourLabel(this.model.tour),
-                tourName: this.tourName
-            }));
+            if (!this.el.innerHTML) {
+                this.$el.html(_.template(this.templateMain(), {
+                    tourName: this.tourName,
+                }));
 
+                this.$('.extra-attrs').append(this.children.skipText.render().el);
+                this.$('.extra-attrs').append(this.children.doneText.render().el);
+                this.$('.extra-attrs').append(this.children.doneURL.render().el);
+                // TODO autoTour/usetour update
+                // this.$('.extra-attrs').append(this.children.forceTour.render().el);
+                $('<button class="tour-button save">Update</button>').appendTo(this.$('.extra-attrs'));
+                $('.header-extra').text(` / ${_('Edit Tour').t()}`);
+            }
+            this.$('.title-label').text(Utils.makeTourLabel(this.model.tour));
+            this.$('.tour-images-container').empty();
             this.renderTiles();
-
-            this.$('.extra-attrs').append(this.children.skipText.render().el);
-            this.$('.extra-attrs').append(this.children.doneText.render().el);
-            this.$('.extra-attrs').append(this.children.doneURL.render().el);
-            this.$('.extra-attrs').append(this.children.forceTour.render().el);
-
-            $('<button class="tour-button save">Update</button>').appendTo(this.$('.extra-attrs'));
-
-            this.$('.tour-images').append(this.addTemplate());
-            $('.header-extra').text(` / ${_('Edit Tour').t()}`);
+            this.$('.tour-images-container').append(this.addTemplate());
 
             if (this.saved) {
                 this.successfulSave();
                 this.saved = false;
             }
+
             this.checkReorder();
             return this;
         }
@@ -320,12 +322,16 @@ define([
         templateMain() {
             return `
                 <div class="section-padded section-header">
-                    <h2 class="section-title"><%- label %> <a href="#" class="edit-label"><%- _('edit label').t() %></a></h2>
+                    <h2 class="section-title">
+                        <span class="title-label"></span>
+                        <a href="#" class="edit-label"><%- _('edit label').t() %></a>
+                    </h2>
                     <p><%- _('Tour ID').t() %>: <%- tourName %></p>
                     <button class="button tour-button img-back">< <%- _('Back').t() %></button>
                     <button class="button tour-button reorder"><%- _('Reorder Slides').t() %></button>
                     <div class="tour-images">
                         <button class="button tour-button stop-reorder"><%- _('Finish Reorder').t() %></button>
+                        <div class="tour-images-container" />
                     </div>
                     <div class="extra-attrs form-horizontal">
                         <div class="error-box message"></div>

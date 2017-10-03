@@ -1,6 +1,12 @@
 .navbar-splunkbar {
     position: relative;
 }
+.dashboard-header {
+    padding: 20px;
+    background-color: steelblue;
+    color: #FFF;
+    border-bottom: 1px solid #CCC;
+}
 .touromatic {
     padding: 0 30px 30px;
 }
@@ -155,7 +161,7 @@ p.tour-id {
     margin-bottom: 20px;
 }
 .tour-images.sorting {
-    padding: 80px 20px 20px;
+    padding: 10px;
     background: #FFF;
 }
 .tour-images.sorting .image-tile {
@@ -172,7 +178,7 @@ p.tour-id {
     padding: 2px;
     background: #FFF;
     border: 1px solid #CCC;
-    margin: 0 10px 10px 0;
+    margin: 10px 10px 0 0;
     display: inline-block;
     height: 250px;
     width: 250px;
@@ -375,13 +381,11 @@ a.edit-label {
     z-index: 999;
 }
 .stop-reorder {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
     display: none;
+    width: 100%;
     font-size: 25px;
     padding: 20px;
+    margin: 0;
 }
 p.image-caption {
     height: 35px;
@@ -531,6 +535,7 @@ header.hidden {
     margin-top: -40px;
     margin-bottom: 40px;
 }
-.alert-error {
+.alert-error,
+.auto-options {
     display: none;
 }

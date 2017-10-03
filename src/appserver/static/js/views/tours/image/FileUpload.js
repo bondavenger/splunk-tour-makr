@@ -112,7 +112,6 @@ define([
 
             $dropzone
                 .on('drop', e => {
-                    e.stopPropagation();
                     e.preventDefault();
                     const files = e.originalEvent.dataTransfer.files;
                     const file = files[0];

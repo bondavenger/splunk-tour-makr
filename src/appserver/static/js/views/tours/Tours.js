@@ -30,21 +30,20 @@ define([
                 },
                 'click .add-tour-img': e => {
                     e.preventDefault();
-                    e.stopPropagation();
                     this.children.newImgTour = new NewTourDialog({
                         model: {
                             tour: new TourModel(),
-                            application: this.model.application
+                            application: this.model.application,
                         },
                         collection: {
-                            tours: this.collection.tours
+                            tours: this.collection.tours,
+                            appLocals: this.collection.appLocals,
                         }
                     });
                     this.children.newImgTour.render().appendTo($('body')).show();
                 },
                 'click .add-tour-int': e => {
                     e.preventDefault();
-                    e.stopPropagation();
                     this.newEditIntTour(true);
                 },
                 'click .user-interactive-tours .interactive-tour-tile .edit': e => {
@@ -92,7 +91,10 @@ define([
                         const newItem = new NewItem({
                             model: {
                                 tour: tour
-                            }
+                            },
+                            collection: {
+                                tours: this.collection.tours,
+                            },
                         });
 
                         if (tour.entry.content.has('spl')) {

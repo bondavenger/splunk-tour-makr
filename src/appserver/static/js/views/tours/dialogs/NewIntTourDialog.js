@@ -48,6 +48,10 @@ define([
                     items: appsList,
                     className: 'btn-group',
                     toggleClassName: 'btn',
+                    popdownOptions: {
+                        attachDialogTo: '.modal:visible',
+                        scrollContainer: '.modal:visible .modal-body:visible',
+                    }
                 },
                 label: _('App').t(),
                 tooltip: _('Select the app for this tour. Defaults to search.').t(),
@@ -69,10 +73,6 @@ define([
                     modelAttribute: 'urlData',
                     model: this.model.tour.entry.content,
                     placeholder:  _('Optional').t(),
-                    popdownOptions: {
-                        attachDialogTo: '.modal:visible',
-                        scrollContainer: '.modal:visible .modal-body:visible',
-                    }
                 },
                 label: _('Querystring').t(),
                 tooltip: _('Optional. ex) ?s=foosearch&other=data').t(),

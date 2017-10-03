@@ -25,8 +25,6 @@ define([
             this.collection.tours = new ToursCollection();
             this.collection.tours.fetch({
                 data: {
-                    app: 'tour_makr',
-                    owner: this.model.application.get('owner'),
                     count: -1,
                 }
             }).done(() => {

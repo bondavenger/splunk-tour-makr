@@ -61,9 +61,11 @@ define([
         }
 
         removeTour() {
-            this.model.tour.destroy();
-            this.$el.fadeOut(1000, () => {
-                this.$el.remove();
+            this.model.tour.destroy({ silent: true, wait: true })
+            .done(() => {
+                this.$el.fadeOut(1000, () => {
+                    this.$el.remove();
+                });
             });
         }
 

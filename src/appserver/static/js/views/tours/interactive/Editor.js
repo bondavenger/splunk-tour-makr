@@ -7,6 +7,7 @@ define(
         'app/views/tours/interactive/Step',
         'splunk.util',
         'app/contrib/dom.outline',
+        'jquery.ui.sortable',
     ],
     function(
         $,
