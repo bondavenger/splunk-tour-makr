@@ -62,7 +62,8 @@ define([
 
                 appsList.push({ label: label, value: id });
             });
-            appsList.push({ value: 'manager', label: 'manager' });
+            // Tours dont work on manager pages yet
+            // appsList.push({ value: 'manager', label: 'manager' });
 
             this.children.apps = new ControlGroup({
                 className: 'apps-control-group',
@@ -146,22 +147,29 @@ define([
                 search: 'isVisible=1',
                 count: -1,
             }
+            this.views = new ViewsCollection();
 
-            if (app === 'manager') {
-                this.views = new Managers();
-                data = {
-                    count: -1,
-                };
-            } else {
-                this.views = new ViewsCollection();
-            }
+            // Manager pages don't work yet
+            // if (app === 'manager') {
+            //     this.views = new Managers();
+            //     data = {
+            //         count: -1,
+            //     };
+            // } else {
+            //     this.views = new ViewsCollection();
+            // }
 
             this.views.fetch({ data: data }).done(views => {
-                const viewItems = this.views.map(view => {
-                    const name = view.entry.get('name');
-                    const label = view.entry.content.get('label') || name;
-                    return { value: name, label: name };
-                });
+                const viewItems = this.views
+                    .filter(view => {
+                        const name = view.entry.get('name');
+                        return (name !== 'live_tail');
+                    })
+                    .map(view => {
+                        const name = view.entry.get('name');
+                        const label = view.entry.content.get('label') || name;
+                        return { value: name, label: name };
+                    });
 
                 setTimeout(() => {
                     this.updateViews(viewItems)
@@ -192,7 +200,7 @@ define([
         validate() {
             let valid = true;
             const label = this.model.tour.entry.content.get('label');
-            const pattern = new RegExp(/[~`#$%\^&*+=\[\]\\';,/{}|\\":<>]/);
+            const pattern = new RegExp(/[~`#$%\^*+=\[\]\\;,/{}|\\<>]/);
 
             if (!label) {
                 this.showError(_(`Tour name can't be empty`).t());
@@ -215,20 +223,23 @@ define([
 
             const isAutoTour = splunkUtils.normalizeBoolean(this.model.tour.entry.content.get('otherAuto'));
             let tourName = Utils.createTourName(this.model.tour.entry.content.get('label'));
-            let context = 'tour_makr';
+            let app = (isAutoTour) ? this.model.state.get('app') : 'tour_makr';
+
             if (isAutoTour) {
                 const view = this.model.state.get('view');
                 const env = (this.model.serverInfo.isLite()) ? 'lite' : 'enterprise';
-                context = this.model.state.get('app');
+                // Tours don't work on manager pages yet
+                // if (app === 'manager') {
+                //     this.model.tour.entry.content.set('managerPage', true);
+                //     app = 'search';
+                // }
                 tourName = `${view}-tour:${env}`;
             }
 
             this.model.tour.entry.content.set('name', tourName);
             this.model.tour.entry.content.set('type', 'image');
-            this.model.tour.entry.content.set('context', context);
+            this.model.tour.entry.content.set('context', app);
             this.model.tour.entry.content.set('imgPath', '/' + tourName);
-
-            const app = (isAutoTour) ? this.model.state.get('app') : 'tour_makr';
 
             this.model.tour.save({}, {
                 data: {
