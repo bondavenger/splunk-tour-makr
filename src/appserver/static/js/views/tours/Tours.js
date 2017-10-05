@@ -18,6 +18,10 @@ define([
     NewIntDialog
 ) {
     return class ToursView extends BaseView {
+        className() {
+            return 'tours-list';
+        }
+
         events() {
             return {
                 'click .user-image-tours .tour-tile .edit': e => {

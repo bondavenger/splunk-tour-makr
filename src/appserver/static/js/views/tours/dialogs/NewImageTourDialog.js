@@ -192,7 +192,7 @@ define([
         validate() {
             let valid = true;
             const label = this.model.tour.entry.content.get('label');
-            const pattern = new RegExp(/[~`!#$%\^&*+=\[\]\\';,/{}|\\":<>\?]/);
+            const pattern = new RegExp(/[~`#$%\^&*+=\[\]\\';,/{}|\\":<>]/);
 
             if (!label) {
                 this.showError(_(`Tour name can't be empty`).t());

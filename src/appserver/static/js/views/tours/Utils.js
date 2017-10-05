@@ -17,7 +17,7 @@ define(() => {
         },
 
         createTourName: label => {
-            return (label) ? label.split(' ').join('_').replace(/[;:'",/\\]+/g, '').toLowerCase() : '';
+            return (label) ? label.split(' ').join('-').replace(/[;:'",?!/\\]+/g, '').toLowerCase() : '';
         },
     }
 

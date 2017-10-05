@@ -21,6 +21,10 @@ define([
     splunkUtils
 ) {
     return class ImageTourEditor extends BaseView {
+        className() {
+            return 'tour-edit';
+        }
+
         initialize() {
             super.initialize(...arguments);
 
