@@ -65,16 +65,9 @@ define([
                     To launch a tour named <b>tour-foo</b> on the Reports page, use <b>/app/search/reports?tour=tour-foo</b>.
                 </div>
 
-                <div class="question">How do I make a tour auto popup for users?</div>
+                <div class="question">What's an Auto tour?</div>
                 <div class="answer">
-                    <p>I can make a tour auto prompt on a page?! But, of course! Here are the steps to do so: (this will involve editing the etc/apps/tour_makr/local/ui-tour.conf file)</p>
-                    <ol>
-                        <li>Name the tour (set the tour id) to the name of the view you\'re going to use it.</li>
-                        <li>Append "-tour" to that name. For example:
-                            <p>If you want to auto prompt for a tour on the Reports page, the tour stanza name would need to be <b>[reports-tour]</b>.</p></li>
-                        <li>Here's the tricky part... We allow users to create tours for enterprise and light instances, so you have to add this info to the tour name. Here's how it looks using the above example:
-                            <p> Use <b>[reports-tour:enterprise]</b> for Enterprise and <b>[reports-tour:lite]</b> for Splunk Light instances.</p></li>
-                    </ol>
+                    <p>These are the tours that auto popup a message to view them when a user navigates to a specific page.</p>
                     <ul><b>NOTES:</b>
                         <li> Once a tour has been skipped or viewed by a user, an attribute is set on that tour as viewed. It will no longer prompt a user after.</li>
                         <li> Prompts are per user. </li>
