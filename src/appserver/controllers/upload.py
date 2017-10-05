@@ -18,10 +18,11 @@ class UploadController(controllers.BaseController):
         image = kargs.get('image', None)
         tour_name = kargs.get('tourName', None)
         filename = kargs.get('filename', None)
+        app = kargs.get('app', None)
 
         if image is not None :
             try:
-                tempPath = util.make_splunkhome_path(['etc', 'apps', 'tour_makr', 'appserver', 'static', 'img', tour_name])
+                tempPath = util.make_splunkhome_path(['etc', 'apps', app, 'appserver', 'static', 'img', tour_name])
                 if not os.path.exists(tempPath):
                     os.makedirs(tempPath)
 

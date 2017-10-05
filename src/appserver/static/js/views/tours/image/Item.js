@@ -41,37 +41,13 @@ define([
         }
 
         removeTour() {
-            // TODO useTour is updated
-            // const isAuto = this.model.tour.entry.content.get('otherAuto');
-            // const name = this.model.tour.getName();
             this.model.tour.destroy({ silent: true, wait: true })
             .done(() => {
-                // TODO useTour is updated
-                // if (isAuto) {
-                //     this.removeAutoTours(name);
-                // }
                 this.$el.fadeOut(1000, () => {
                     this.$el.remove();
                 });
             });
         }
-
-        // TODO useTour is updated
-        // removeAutoTours(name) {
-        //     const entTour = this.collection.tours.find(model => {
-        //         return (model.getName() === `${name}:enterprise`);
-        //     });
-        //     const lightTour = this.collection.tours.find(model => {
-        //         return (model.getName() === `${name}:lite`);
-        //     });
-
-        //     if (entTour) {
-        //         entTour.destroy({ silent: true, wait: true });
-        //     }
-        //     if (lightTour) {
-        //         lightTour.destroy({ silent: true, wait: true });
-        //     }
-        // }
 
         removeConfirm(e) {
             e.preventDefault();
@@ -83,7 +59,8 @@ define([
 
         render() {
             const tourName = this.model.tour.getName();
-            const imgDest = splunkUtil.make_url(splunkUtil.sprintf('static/app/tour_makr/img/%s', tourName));
+            const app = this.model.tour.getTourApp();
+            const imgDest = splunkUtil.make_url(`static/app/${app}/img/${tourName}`);
 
             this.$el.html(_.template(this.templateMain(), {
                 label: Utils.makeTourLabel(this.model.tour),
@@ -108,7 +85,7 @@ define([
                         <a class="edit action-button"><%- _('Edit').t() %></a>
                         <br>
                         <a class="remove action-button"><%- _('Remove').t() %></a>
-                        <p class="tour-id"><%- _('id').t() %>: <%- tourID %></p>
+                        <p class="tour-id"><%- tourID %></p>
                     </div>
                 </div>
             `;

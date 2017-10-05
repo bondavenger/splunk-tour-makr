@@ -14,7 +14,7 @@ define([
     TourModel,
     ImageTourItem,
     InteractiveTourItem,
-    NewTourDialog,
+    NewImageTourDialog,
     NewIntDialog
 ) {
     return class ToursView extends BaseView {
@@ -30,10 +30,11 @@ define([
                 },
                 'click .add-tour-img': e => {
                     e.preventDefault();
-                    this.children.newImgTour = new NewTourDialog({
+                    this.children.newImgTour = new NewImageTourDialog({
                         model: {
                             tour: new TourModel(),
                             application: this.model.application,
+                            serverInfo: this.model.serverInfo,
                         },
                         collection: {
                             tours: this.collection.tours,
@@ -85,7 +86,7 @@ define([
             if (this.collection.tours) {
                 this.collection.tours.each(tour => {
                     const tourName = tour.entry.get('name');
-                    if (tourName.indexOf(':') == -1 && tour.getImageContext() != 'system') {
+                    if (tour.getImageContext() != 'system') {
                         const tourType = tour.entry.content.get('type');
                         const NewItem = (tourType === 'interactive') ? InteractiveTourItem : ImageTourItem;
                         const newItem = new NewItem({

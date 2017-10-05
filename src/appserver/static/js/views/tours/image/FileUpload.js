@@ -31,7 +31,9 @@ define([
             this.model.input = new UploadModel();
             this.filename = this.model.tour.entry.content.get(this.options.imageAttrName) || false;
             this.fileData = this.model.tour.entry.content.get(this.options.imageAttr) || false;
-            this.imgDest = splunkUtil.make_url(splunkUtil.sprintf('static/app/tour_makr/img/%s', this.model.tour.entry.get('name')));
+            this.app = this.model.tour.getTourApp();
+            this.tourName = this.model.tour.entry.get('name');
+            this.imgDest = splunkUtil.make_url(`static/app/${this.app}/img/${this.tourName}`);
 
             this.collection = {};
             // Use this flashmessage for input model
@@ -158,7 +160,8 @@ define([
                 const formdata = new FormData();
                 formdata.append('image', file);
                 formdata.append('filename', filename);
-                formdata.append('tourName', this.model.tour.entry.get('name'));
+                formdata.append('tourName', this.tourName);
+                formdata.append('app', this.model.tour.getTourApp());
 
                 $.ajax({
                     url: '/en-US/custom/tour_makr/upload/',

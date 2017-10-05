@@ -7,6 +7,7 @@ define([
     'app/views/tours/dialogs/NewImageDialog',
     'app/views/tours/dialogs/EditLabelDialog',
     'app/views/tours/Utils',
+    'splunk.util',
     'jquery.ui.sortable',
 ], function(
     $,
@@ -16,7 +17,8 @@ define([
     ImageItem,
     NewImageDialog,
     EditLabelDialog,
-    Utils
+    Utils,
+    splunkUtils
 ) {
     return class ImageTourEditor extends BaseView {
         initialize() {
@@ -28,15 +30,30 @@ define([
                 this.imageTotal = this.model.tour.getImageTotal();
                 this.nextImg = this.imageTotal + 1;
             }
-            // TODO autoTour/usetour update
-            // this.children.forceTour = new ControlGroup({
-            //     controlType: 'SyntheticCheckbox',
-            //     controlOptions: {
-            //         modelAttribute: 'forceTour',
-            //         model: this.model.tour.entry.content,
-            //     },
-            //     label: _('Force tour').t(),
-            // });
+
+            this.isAutoTour = splunkUtils.normalizeBoolean(this.model.tour.entry.content.get('otherAuto'));
+            if (this.isAutoTour) {
+                this.children.forceTour = new ControlGroup({
+                    controlType: 'SyntheticCheckbox',
+                    controlOptions: {
+                        modelAttribute: 'forceTour',
+                        model: this.model.tour.entry.content,
+                    },
+                    label: _('Force tour').t(),
+                    tooltip: _('Force users to take tour. (No skip option)').t(),
+                });
+
+                this.children.introText = new ControlGroup({
+                    controlType: 'Textarea',
+                    controlOptions: {
+                        modelAttribute: 'intro',
+                        model: this.model.tour.entry.content,
+                        placeholder: _('Optional: this text replaces the auto popup for the tour').t(),
+                    },
+                    label: _('Tour popup text').t(),
+                    tooltip: _('Default is: It looks like this is your first time on this page. Would you like to take a quick tour?.').t(),
+                });
+            }
 
             const skipText = this.model.tour.getSkipLabel();
             this.model.tour.entry.content.set('skipText', skipText);
@@ -60,6 +77,7 @@ define([
                     placeholder: _('Optional').t(),
                 },
                 label: _('Done button text').t(),
+                tooltip: _('Text that replaces the done(end) button. Default: Try is now').t(),
             });
 
             const doneURL = this.model.tour.getDoneURL();
@@ -72,6 +90,7 @@ define([
                     placeholder: _('ex) /app/search/reports').t(),
                 },
                 label: _('Done link URL').t(),
+                tooltip: _('Instead of closing the tour, this will send a user to this link.').t(),
             });
 
             this.activate({ deep: true });
@@ -107,11 +126,11 @@ define([
             this.$('.message').hide();
 
             this.model.tour.save()
-            .done(() => {
-                this.saved = true;
-            }).fail(() => {
-                this.showError('Error saving form');
-            });
+                .done(() => {
+                    this.saved = true;
+                }).fail(() => {
+                    this.showError('Error saving form');
+                });
         }
 
         successfulSave() {
@@ -170,18 +189,17 @@ define([
                 name: newModel.entry.get('name'),
             });
 
-            // TODO useTOUR/autoTour
-            // make sure app is the pre destroyed tour's origin app
+            const app = this.model.tour.getTourApp();
             this.model.tour.destroy({ silent: true, wait: true })
-            .done(() => {
-                this.model.tour = newModel;
-                this.model.tour.save({}, {
-                    data: {
-                        app: 'tour_makr',
-                        owner: 'nobody',
-                    }
+                .done(() => {
+                    this.model.tour = newModel;
+                    this.model.tour.save({}, {
+                        data: {
+                            app: app,
+                            owner: 'nobody',
+                        }
+                    });
                 });
-            });
         }
 
         _doTheTimeWarp(i) {
@@ -284,6 +302,7 @@ define([
                         imageCaption: imageCaption,
                         imageOrder: imageOrder,
                         tourName: this.tourName,
+                        app: this.model.tour.getTourApp(),
                     });
 
                     this.$('.tour-images-container').append(newItem.render().el);
@@ -297,13 +316,16 @@ define([
                     tourName: this.tourName,
                 }));
 
-                this.$('.extra-attrs').append(this.children.skipText.render().el);
-                this.$('.extra-attrs').append(this.children.doneText.render().el);
-                this.$('.extra-attrs').append(this.children.doneURL.render().el);
-                // TODO autoTour/usetour update
-                // this.$('.extra-attrs').append(this.children.forceTour.render().el);
+                this.$('.extra-attrs').prepend(this.children.doneURL.render().el);
+                this.$('.extra-attrs').prepend(this.children.doneText.render().el);
+                this.$('.extra-attrs').prepend(this.children.skipText.render().el);
+                if (this.isAutoTour) {
+                    this.$('.auto-attrs').append(this.children.forceTour.render().el);
+                    this.$('.auto-attrs').append(this.children.introText.render().el);
+                }
                 $('<button class="tour-button save">Update</button>').appendTo(this.$('.extra-attrs'));
                 $('.header-extra').text(` / ${_('Edit Tour').t()}`);
+                $('.header-extra.tourname').text(this.tourName);
             }
             this.$('.title-label').text(Utils.makeTourLabel(this.model.tour));
             this.$('.tour-images-container').empty();
@@ -326,7 +348,6 @@ define([
                         <span class="title-label"></span>
                         <a href="#" class="edit-label"><%- _('edit label').t() %></a>
                     </h2>
-                    <p><%- _('Tour ID').t() %>: <%- tourName %></p>
                     <button class="button tour-button img-back">< <%- _('Back').t() %></button>
                     <button class="button tour-button reorder"><%- _('Reorder Slides').t() %></button>
                     <div class="tour-images">
@@ -334,6 +355,7 @@ define([
                         <div class="tour-images-container" />
                     </div>
                     <div class="extra-attrs form-horizontal">
+                        <div class="auto-attrs"></div>
                         <div class="error-box message"></div>
                     </div>
                     <div class="success-box message"><%- _('Successful Save').t() %></div>

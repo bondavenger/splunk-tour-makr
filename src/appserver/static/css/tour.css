@@ -199,7 +199,7 @@ p.tour-id {
     color: #FFF;
     padding: 5px 10px;
     position: absolute;
-    top: 180px;
+    top: 200px;
     transition: top .5s;
 }
 .image-tile .image-container .info-container.active,
@@ -392,6 +392,12 @@ p.image-caption {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    width: 90%;
+    margin: 10px;
+}
+p.filename {
+    height: 20px;
+    text-overflow: ellipsis;
 }
 .alerts.shared-flashmessageslegacy {
     padding: 0 10px;
@@ -529,6 +535,9 @@ header {
     transition: margin .5s;
     margin-top: 0;
     margin-bottom: 0;
+}
+span.header-extra.tourname {
+    float: right;
 }
 header.hidden {
     transition: .5s;

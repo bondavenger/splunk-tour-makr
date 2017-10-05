@@ -8,6 +8,7 @@ define([
     'collections/services/data/ui/Managers',
     'models/services/data/ui/Tour',
     'app/views/tours/Utils',
+    'splunk.util',
 ], function(
     _,
     Backbone,
@@ -17,7 +18,8 @@ define([
     ViewsCollection,
     Managers,
     TourModel,
-    Utils
+    Utils,
+    splunkUtils
 ) {
     return class NewImageTourModal extends Modal {
         initialize(options) {
@@ -26,7 +28,7 @@ define([
             this.model.tour = new TourModel();
             this.model.tour.entry.content.set('otherAuto', false);
             this.model.state = new Backbone.Model({
-                app: null,
+                app: 'search',
                 view: null,
             });
 
@@ -42,45 +44,44 @@ define([
                 label: _('Tour Name').t(),
             });
 
-            // TODO useTour is updated
-            // this.children.autoTour = new ControlGroup({
-            //     controlType: 'SyntheticCheckbox',
-            //     controlOptions: {
-            //         modelAttribute: 'otherAuto',
-            //         model: this.model.tour.entry.content,
-            //     },
-            //     label: _('Auto tour').t(),
-            //     tooltip: _('Sets the tour to auto run for users on a specific view.').t(),
-            // });
+            this.children.autoTour = new ControlGroup({
+                controlType: 'SyntheticCheckbox',
+                controlOptions: {
+                    modelAttribute: 'otherAuto',
+                    model: this.model.tour.entry.content,
+                },
+                label: _('Auto tour').t(),
+                tooltip: _('Sets the tour to auto run for users on a specific view.').t(),
+            });
 
-            // const apps = this.collection.appLocals;
-            // const appsList =[];
+            const appsList = [];
 
-            // apps.models.forEach(app => {
-            //     const label = app.entry.content.get('label');
-            //     const id = app.entry.get('name');
+            this.collection.appLocals.models.forEach(app => {
+                const label = app.entry.content.get('label');
+                const id = app.entry.get('name');
 
-            //     appsList.push({ label: label, value: id });
-            // });
-            // appsList.push({ value: 'manager', label: 'manager' });
-            // this.children.apps = new ControlGroup({
-            //     className: 'apps-control-group',
-            //     controlType: 'SyntheticSelect',
-            //     controlClass: 'controls-block',
-            //     controlOptions: {
-            //         modelAttribute: 'app',
-            //         model: this.model.state,
-            //         items: appsList,
-            //         className: 'btn-group',
-            //         toggleClassName: 'btn',
-            //         popdownOptions: {
-            //             attachDialogTo: '.modal:visible',
-            //             scrollContainer: '.modal:visible .modal-body:visible',
-            //         }
-            //     },
-            //     label: _('App').t(),
-            //     tooltip: _('Select the app for page scope (defaults to search).').t(),
-            // });
+                appsList.push({ label: label, value: id });
+            });
+            appsList.push({ value: 'manager', label: 'manager' });
+
+            this.children.apps = new ControlGroup({
+                className: 'apps-control-group',
+                controlType: 'SyntheticSelect',
+                controlClass: 'controls-block',
+                controlOptions: {
+                    modelAttribute: 'app',
+                    model: this.model.state,
+                    items: appsList,
+                    className: 'btn-group',
+                    toggleClassName: 'btn',
+                    popdownOptions: {
+                        attachDialogTo: '.modal:visible',
+                        scrollContainer: '.modal:visible .modal-body:visible',
+                    }
+                },
+                label: _('App').t(),
+                tooltip: _('Select the app for page scope (defaults to search).').t(),
+            });
 
             this.activate();
         }
@@ -96,83 +97,83 @@ define([
             });
         }
 
-        // TODO useTour is updated
-        // updateViews(viewItems) {
-        //     this.children.views.remove();
-        //     this.model.state.set('view', viewItems[0].value);
-        //     this.children.views = new ControlGroup({
-        //         className: 'views-control-group',
-        //         controlType: 'SyntheticSelect',
-        //         controlClass: 'controls-block',
-        //         controlOptions: {
-        //             modelAttribute: 'view',
-        //             model: this.model.state,
-        //             items: viewItems,
-        //             className: 'btn-group',
-        //             toggleClassName: 'btn',
-        //             popdownOptions: {
-        //                 attachDialogTo: '.modal:visible',
-        //                 scrollContainer: '.modal:visible .modal-body:visible',
-        //             }
-        //         },
-        //         label: _('Page').t(),
-        //         tooltip: _('The specific page the tour will auto run on. (includes dashboards)').t(),
-        //     });
-        //     this.children.views.render().appendTo(this.$('.auto-options'));
-        // }
+        updateViews(viewItems) {
+            this.children.views.remove();
+            this.model.state.set('view', viewItems[0].value);
+            this.children.views = new ControlGroup({
+                className: 'views-control-group',
+                controlType: 'SyntheticSelect',
+                controlClass: 'controls-block',
+                controlOptions: {
+                    modelAttribute: 'view',
+                    model: this.model.state,
+                    items: viewItems,
+                    className: 'btn-group',
+                    toggleClassName: 'btn',
+                    popdownOptions: {
+                        attachDialogTo: '.modal:visible',
+                        scrollContainer: '.modal:visible .modal-body:visible',
+                    }
+                },
+                label: _('Page').t(),
+                tooltip: _('The specific page the tour will auto run on. (includes dashboards)').t(),
+            });
+            this.children.views.render().appendTo(this.$('.auto-options'));
+        }
 
-        // populateViews() {
-        //     if (this.children.views) {
-        //         this.children.views.remove();
-        //     }
+        populateViews() {
+            if (this.children.views) {
+                this.children.views.remove();
+            }
 
-        //     this.model.state.set('view', _('Loading...').t());
-        //     this.children.views = new ControlGroup({
-        //         controlType: 'Label',
-        //         controlOptions: {
-        //             modelAttribute: 'view',
-        //             model: this.model.state,
-        //         },
-        //         label: _('Page').t(),
-        //         tooltip: _('The specific page the tour will auto run on. (includes dashboards)').t(),
-        //     });
-        //     this.children.views.render().appendTo(this.$('.auto-options'));
+            this.model.state.set('view', _('Loading...').t());
+            this.children.views = new ControlGroup({
+                controlType: 'Label',
+                controlOptions: {
+                    modelAttribute: 'view',
+                    model: this.model.state,
+                },
+                label: _('Page').t(),
+                tooltip: _('The specific page the tour will auto run on. (includes dashboards)').t(),
+            });
+            this.children.views.render().appendTo(this.$('.auto-options'));
 
-        //     const app = this.model.state.get('app');
-        //     const owner = this.model.application.get('owner') || 'admin';
-        //     let data = {
-        //         app: app,
-        //         owner: owner,
-        //         search: 'isVisible=1',
-        //         count: -1,
-        //     }
+            const app = this.model.state.get('app');
+            const owner = this.model.application.get('owner') || 'admin';
+            let data = {
+                app: app,
+                owner: owner,
+                search: 'isVisible=1',
+                count: -1,
+            }
 
-        //     if (app === 'manager') {
-        //         this.views = new Managers();
-        //         data = {
-        //             count: -1,
-        //         };
-        //     } else {
-        //         this.views = new ViewsCollection();
-        //     }
+            if (app === 'manager') {
+                this.views = new Managers();
+                data = {
+                    count: -1,
+                };
+            } else {
+                this.views = new ViewsCollection();
+            }
 
-        //     this.views.fetch({ data: data }).done(views => {
-        //         const viewItems = this.views.map(view => {
-        //             const name = view.entry.get('name');
-        //             const label = view.entry.content.get('label') || name;
-        //             return { value: name, label: name };
-        //         });
+            this.views.fetch({ data: data }).done(views => {
+                const viewItems = this.views.map(view => {
+                    const name = view.entry.get('name');
+                    const label = view.entry.content.get('label') || name;
+                    return { value: name, label: name };
+                });
 
-        //         setTimeout(() => {
-        //             this.updateViews(viewItems)
-        //         }, 500);
-        //     });
-        // }
+                setTimeout(() => {
+                    this.updateViews(viewItems)
+                }, 500);
+            });
+        }
 
         toggeAutoOptions() {
             const autoOptions = this.model.tour.entry.content.get('otherAuto');
             if (autoOptions) {
                 this.$('.auto-options').fadeIn();
+                this.populateViews();
             } else {
                 this.$('.auto-options').fadeOut();
             }
@@ -194,10 +195,10 @@ define([
             const pattern = new RegExp(/[~`!#$%\^&*+=\[\]\\';,/{}|\\":<>\?]/);
 
             if (!label) {
-                this.showError(_(`Text name can't be empty`).t());
+                this.showError(_(`Tour name can't be empty`).t());
                 valid = false;
             } else if (pattern.test(label)) {
-                this.showError(_(`Text name can't contain special characters`).t());
+                this.showError(_(`Tour name can't contain special characters`).t());
                 valid = false;
             }
 
@@ -206,22 +207,25 @@ define([
 
         save(e) {
             e.preventDefault();
+
             this.hideError();
             if (!this.validate()) {
                 return;
             }
-            // TODO useTour is updated
-            // const isAutoTour = this.model.tour.entry.content.get('otherAuto');
-            const isAutoTour = false;
+
+            const isAutoTour = splunkUtils.normalizeBoolean(this.model.tour.entry.content.get('otherAuto'));
             let tourName = Utils.createTourName(this.model.tour.entry.content.get('label'));
+            let context = 'tour_makr';
             if (isAutoTour) {
                 const view = this.model.state.get('view');
-                tourName = `${view}-tour`;
+                const env = (this.model.serverInfo.isLite()) ? 'lite' : 'enterprise';
+                context = this.model.state.get('app');
+                tourName = `${view}-tour:${env}`;
             }
 
             this.model.tour.entry.content.set('name', tourName);
             this.model.tour.entry.content.set('type', 'image');
-            this.model.tour.entry.content.set('context', 'tour_makr');
+            this.model.tour.entry.content.set('context', context);
             this.model.tour.entry.content.set('imgPath', '/' + tourName);
 
             const app = (isAutoTour) ? this.model.state.get('app') : 'tour_makr';
@@ -232,49 +236,18 @@ define([
                     owner: 'nobody',
                 }
             }).done(() => {
-                if (isAutoTour) {
-                    this.createAutoTours(app, tourName);
-                } else {
-                    this.hide();
-                    this.collection.tours.trigger('new', this.model.tour);
-                }
+                this.hide();
+                this.collection.tours.trigger('new', this.model.tour);
             }).fail(response => {
                 if (response.status === 409) {
-                    this.showError(_(`A tour with the id '${this.model.tour.entry.content.get('name')}' already exists.`).t());
-                    // this.showError(_(`A tour with the id '${this.model.tour.entry.content.get('name')}' already exists. (If it's an auto tour, there may be an issue with the selected view.)`).t());
+                    if (isAutoTour) {
+                        this.showError(_(`A tour with the id '${this.model.tour.entry.content.get('name')}' already exists. This is an auto tour so there may be a tour already created for this page.)`).t());
+                    } else {
+                        this.showError(_(`A tour with the id '${this.model.tour.entry.content.get('name')}' already exists.`).t());
+                    }
                 }
             });
         }
-
-        // TODO useTour is updated
-        // createAutoTours(app, tourName) {
-        //     const data = this.model.tour.entry.content.toJSON();
-        //     const entTour = new TourModel();
-        //     const lightTour = new TourModel();
-        //     entTour.entry.content.set(data);
-        //     entTour.entry.content.set('name', `${tourName}:enterprise`);
-        //     entTour.entry.content.set('useTour', tourName);
-        //     lightTour.entry.content.set(data);
-        //     lightTour.entry.content.set('name', `${tourName}:lite`);
-        //     lightTour.entry.content.set('useTour', tourName);
-
-        //     entTour.save({}, {
-        //         data: {
-        //             app: app,
-        //             owner: 'nobody',
-        //         }
-        //     }).always(() => {
-        //         lightTour.save({}, {
-        //             data: {
-        //                 app: app,
-        //                 owner: 'nobody',
-        //             }
-        //         }).always(() => {
-        //             this.hide();
-        //             this.collection.tours.trigger('new', this.model.tour);
-        //         });
-        //     })
-        // }
 
         render() {
             this.$el.html(Modal.TEMPLATE);
@@ -285,10 +258,10 @@ define([
             this.$(Modal.BODY_SELECTOR).append(Modal.FORM_HORIZONTAL);
             $('<div class="alert alert-error"><i class="icon-alert" /><span class="error-text" /></div>').appendTo(this.$(Modal.BODY_FORM_SELECTOR));
             this.children.titleField.render().appendTo(this.$(Modal.BODY_FORM_SELECTOR));
-            // TODO useTour is updated
-            // this.children.autoTour.render().appendTo(this.$(Modal.BODY_FORM_SELECTOR));
-            // $('<div class="auto-options control-group" />').appendTo(this.$(Modal.BODY_FORM_SELECTOR));
-            // this.children.apps.render().appendTo(this.$('.auto-options'));
+
+            this.children.autoTour.render().appendTo(this.$(Modal.BODY_FORM_SELECTOR));
+            $('<div class="auto-options control-group" />').appendTo(this.$(Modal.BODY_FORM_SELECTOR));
+            this.children.apps.render().appendTo(this.$('.auto-options'));
 
             this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_CANCEL);
             this.$(Modal.FOOTER_SELECTOR).append(Modal.BUTTON_SAVE);

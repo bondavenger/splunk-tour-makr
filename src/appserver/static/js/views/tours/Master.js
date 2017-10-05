@@ -125,6 +125,7 @@ define([
             this.children.toursView = new ToursView({
                 model: {
                     application: this.model.application,
+                    serverInfo: this.model.serverInfo,
                 },
                 collection: {
                     tours: this.collection.tours,
@@ -161,7 +162,8 @@ define([
             this.children.tourEditPage = new ImageTourEditor({
                 model: {
                     application: this.model.application,
-                    tour: this.model.tour
+                    tour: this.model.tour,
+                    serverInfo: this.model.serverInfo,
                 }
             });
 
@@ -235,6 +237,7 @@ define([
 
         render() {
             $('<span class="header-extra" />').appendTo($('.dashboard-header h2'));
+            $('<span class="header-extra tourname" />').appendTo($('.dashboard-header h2'));
             this.$el.html(this.mainTemplate);
             if (this.editTour) {
                 this.renderEditPage();

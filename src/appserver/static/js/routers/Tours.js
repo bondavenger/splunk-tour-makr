@@ -75,6 +75,7 @@ define([
                 this.toursView = new ToursView({
                     model: {
                         application: this.model.application,
+                        serverInfo: this.model.serverInfo,
                     },
                     collection: {
                         tours: this.collection.tours,
