@@ -49,6 +49,27 @@ define(
             }
         }
 
+        reorder() {
+            const sortableOptions = {
+                tolerance: 'pointer',
+                items: '.step',
+                scroll: true,
+                delay: 5,
+                helper: 'clone',
+                appendTo: 'body',
+                placeholder: 'step-placeholder',
+                handle: '.drag-handle',
+                opacity: 0.5,
+                stop: e => {
+                    this.resetModelOrder();
+                }
+            };
+
+            this.$('.steps').sortable(sortableOptions)
+                .sortable('enable')
+                .toggleClass('sorting');
+        }
+
         runTour(e) {
             e.preventDefault();
             let qsObj = {};
@@ -142,6 +163,31 @@ define(
             this.model.tour.entry.content.set('stepElement' + i, newEl);
         }
 
+        resetModelOrder() {
+            const $elementList = $('.step');
+            const stepTotal = $elementList.length;
+            const tourContent = this.model.tour.entry.content;
+            const elements = $('.step-element .input-label').map((key, el) => {
+                return $(el).text();
+            });
+            const captions = $('.step-caption-input').map((key, el) => {
+                return $(el).val();
+            });
+
+            for (let i = 0; i < stepTotal; i++) {
+                const curOrder = i + 1;
+
+                tourContent.set('stepText' + curOrder, captions[i]);
+                tourContent.set('stepElement' + curOrder, elements[i]);
+            };
+
+            this.model.tour.save()
+                .done(() => {
+                    this.removeSteps();
+                    this.renderSteps();
+                });
+        }
+
         addListeners(step) {
             this.listenTo(step, 'getElement', () => {
                 this.startHighlight(step);
@@ -149,6 +195,11 @@ define(
             this.listenTo(step, 'removeStep', () => {
                 this.removeStep(step);
             });
+        }
+
+        removeSteps() {
+            this.$('.step').remove();
+            this.curStep = 0;
         }
 
         renderSteps(timeWarped) {
@@ -215,7 +266,7 @@ define(
                 tourLabel: this.model.tour.getLabel()
             }));
             this.renderSteps();
-
+            this.reorder();
             return this;
         }
 

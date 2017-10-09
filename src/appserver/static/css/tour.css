@@ -333,6 +333,10 @@ p.tour-id {
     width: 250px;
     vertical-align: middle;
 }
+.step-placeholder {
+    border: 3px dashed #666;
+    height: 215px;
+}
 .tour-button {
     padding: 6px 12px;
     background: #333;
@@ -417,7 +421,7 @@ p.filename {
     position: fixed;
     right: -300px;
     top: 0;
-    z-index: 1034;
+    z-index: 999;
     transition: right .5s;
     -webkit-box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
     -moz-box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
@@ -442,11 +446,35 @@ p.filename {
 .step {
     border: 1px solid #eee;
     margin-bottom: 10px;
+    box-shadow: 3px 5px 5px -3px rgba(138,134,138,0.2);
 }
 .step h4 {
-    padding: 6px 10px;
+    padding: 6px 10px 6px 30px;
     margin: 0;
     background: #eee;
+    position: relative;
+}
+.drag-handle {
+    cursor: move;
+    width: 9px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    list-style: none;
+    margin: 0;
+    padding: 4px 4px 0 3px;
+    border-right: 1px solid #CCC;
+    background: #DDD;
+}
+.drag-handle li{
+    float: left;
+    background: #AAA;
+    list-style: none;
+    width: 2px;
+    height: 2px;
+    margin: 2px 0px 0px 2px;
+    display: block;
 }
 .step h4 a {
     color: #333;
@@ -457,15 +485,11 @@ p.filename {
 .element-edit-action {
     display: none;
 }
-.element-edit,
 .element-edit-action {
     margin-bottom: 10px;
 }
 .control-label {
     font-weight: bold;
-}
-.step-elelment-container {
-    border-bottom: 1px solid #CCC;
 }
 .step-caption {
     margin-top: 10px; 

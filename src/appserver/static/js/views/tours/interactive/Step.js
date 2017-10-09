@@ -78,7 +78,7 @@ define([
             this.$('.element-edit').hide();
         }
 
-        setStepElement(setModelVal) {
+        setStepElement(setModelVal, ftr = false) {
             if (setModelVal) {
                 this.model.tour.entry.content.set(this.stepElementID, setModelVal);
             }
@@ -94,7 +94,10 @@ define([
             this.$('.step-element').html(this.children.stepElementLabel.render().el);
             this.$('.element-edit').show();
             this.$('.element-edit-action').hide();
-            this.model.tour.save();
+
+            if (!ftr) {
+                this.model.tour.save();
+            }
         }
 
         render() {
@@ -104,13 +107,17 @@ define([
                 caption: this.caption
             }));
 
-            this.setStepElement();
+            this.setStepElement(false, true);
+            this.$el.attr('data-step', this.stepNum);
             return this;
         }
 
         templateMain() {
             return `
                 <h4>
+                    <ul class="drag-handle">
+                        <li /><li /><li /><li /><li /><li /><li /><li />
+                    </ul>
                     Step <span class="step-num"><%- stepNum %></span>
                     <a class="remove-step pull-right"><i class="icon icon-x-circle"></i></a>
                 </h4>
