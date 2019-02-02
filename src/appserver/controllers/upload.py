@@ -1,5 +1,6 @@
 import cherrypy
 import os
+import imghdr
 
 import splunk.appserver.mrsparkle.controllers as controllers
 from splunk.appserver.mrsparkle.lib.decorators import expose_page
@@ -18,7 +19,11 @@ class UploadController(controllers.BaseController):
         image = kargs.get('image', None)
         tour_name = kargs.get('tourName', None)
         filename = kargs.get('filename', None)
-        app = kargs.get('app', None)
+
+        # Make sure the file is an actual image and one that we accept
+        # Note that files that are not image files at all will return None
+        if imghdr.what(image.file) not in ['gif', 'jpeg', 'bmp', 'png']:
+            raise cherrypy.HTTPError(403, 'The type of file is not allowed; must be gif, jpeg, bmp, or png')
 
         if image is not None :
             try:
