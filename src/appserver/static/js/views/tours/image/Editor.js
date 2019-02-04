@@ -81,7 +81,7 @@ define([
                     placeholder: _('Optional').t(),
                 },
                 label: _('Done button text').t(),
-                tooltip: _('Text that replaces the done(end) button. Default: Try is now').t(),
+                tooltip: _('Text that replaces the done(end) button. Default: "Try it now"').t(),
             });
 
             const doneURL = this.model.tour.getDoneURL();
