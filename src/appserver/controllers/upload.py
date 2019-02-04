@@ -1,5 +1,7 @@
 import cherrypy
 import os
+import imghdr
+import ntpath
 
 import splunk.appserver.mrsparkle.controllers as controllers
 from splunk.appserver.mrsparkle.lib.decorators import expose_page
@@ -8,6 +10,26 @@ from splunk.appserver.mrsparkle.lib import util
 from shutil import copyfileobj
 
 class UploadController(controllers.BaseController):
+
+    def isDirTraversing(self, path_part):
+        """
+        Ensure that the parameter provided doesn't include any pathing information.
+        """
+    
+        if path_part.find('/')>-1 or path_part.find('\\')>-1 or path_part.find('..')>-1 or path_part.startswith('.') or self.cleanPath(path_part) == '':
+            return True
+        else:
+            return False
+
+    def cleanPath(self, path_part):
+        """
+        Clean paths such that any path traversal characters are removed (.., /, etc.). This does this by just
+        returning the base file name (with any paths stripped). ntpath is being used since it works with Windows too.
+
+        Note that this function will return an empty string if the path ends in a slash (since no file name exists).
+        """
+
+        return ntpath.basename(path_part)
 
     @route('/', methods=['POST','GET'])
     @expose_page(must_login=True,verify_session=False)
@@ -20,17 +42,31 @@ class UploadController(controllers.BaseController):
         filename = kargs.get('filename', None)
         app = kargs.get('app', None)
 
+        # Make sure the file is an actual image and one that we accept
+        # Note that files that are not image files at all will return None
+        if imghdr.what(image.file) not in ['gif', 'jpeg', 'bmp', 'png']:
+            raise cherrypy.HTTPError(403, 'The type of file is not allowed; must be gif, jpeg, bmp, or png')
+
         if image is not None :
             try:
-                tempPath = util.make_splunkhome_path(['etc', 'apps', app, 'appserver', 'static', 'img', tour_name])
+
+                # Verify that the app name doesn't attempt a path traversal attack
+                if self.isDirTraversing(app):
+                    return 'App name cannot contain / or \\ character or start with . app="%s"' % app
+
+                # Verify that the tour name doesn't attempt a path traversal attack
+                if self.isDirTraversing(tour_name):
+                    return 'Tour name cannot contain / or \\ character or start with . tour_name="%s"' % tour_name
+
+                tempPath = util.make_splunkhome_path(['etc', 'apps', self.cleanPath(app), 'appserver', 'static', 'img', self.cleanPath(tour_name)])
                 if not os.path.exists(tempPath):
                     os.makedirs(tempPath)
 
-
-                if filename.find('/')>-1 or filename.find('\\')>-1 or filename.startswith('.'):
+                # Verify that the filename doesn't attempt a path traversal attack
+                if self.isDirTraversing(filename):
                     return 'Filename cannot contain / or \\ character or start with . filename="%s"' % filename
 
-                newPath = os.path.join(tempPath, filename)
+                newPath = os.path.join(tempPath, self.cleanPath(filename))
                 with open(newPath, 'wb') as newFile:
                     copyfileobj(image.file,newFile)
 
