@@ -42,7 +42,7 @@ class UploadController(controllers.BaseController):
         image = kargs.get('image', None)
         tour_name = kargs.get('tourName', None)
         filename = kargs.get('filename', None)
-        app = kargs.get('app', None)    
+        app = 'tour_makr' # This is hard-coded in order prevent the upload of files into arbitrary apps
 
         # Get the file extension
         file_extension = os.path.splitext(filename)[1][1:]
