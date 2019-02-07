@@ -11,6 +11,8 @@ from shutil import copyfileobj
 
 class UploadController(controllers.BaseController):
 
+    ALLOWED_FILE_TYPES = ['gif', 'jpeg', 'bmp', 'png']
+
     def isDirTraversing(self, path_part):
         """
         Ensure that the parameter provided doesn't include any pathing information.
@@ -40,11 +42,14 @@ class UploadController(controllers.BaseController):
         image = kargs.get('image', None)
         tour_name = kargs.get('tourName', None)
         filename = kargs.get('filename', None)
-        app = kargs.get('app', None)
+        app = kargs.get('app', None)    
+
+        # Get the file extension
+        file_extension = os.path.splitext(filename)[1][1:]
 
         # Make sure the file is an actual image and one that we accept
         # Note that files that are not image files at all will return None
-        if imghdr.what(image.file) not in ['gif', 'jpeg', 'bmp', 'png']:
+        if imghdr.what(image.file) not in UploadController.ALLOWED_FILE_TYPES or file_extension not in UploadController.ALLOWED_FILE_TYPES:
             raise cherrypy.HTTPError(403, 'The type of file is not allowed; must be gif, jpeg, bmp, or png')
 
         if image is not None :
